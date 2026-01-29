@@ -1,0 +1,321 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.topbar {
+    position: relative;   
+    width: 100%;
+    height: 100px;
+    background: rgb(255, 0, 162);
+
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+}
+
+.logo {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+/* TITLE SA LOOB NG PINK BAR */
+.header-title {
+    margin: 0;
+    color: rgb(255, 255, 255);
+    font-size: 40px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.hero {
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+}
+
+
+.hero-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* basic infos */
+.hero-text {
+    position: absolute;
+    top: 50%;
+    right: 60px;
+    transform: translateY(-50%);
+    max-width: 500px;
+    background: rgba(0, 0, 0, 0.52);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.hero-text h1 {
+    color: #0a4dbf;
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.hero-text h2 {
+    font-size: 16px;
+    color: #f8f8f8;
+    font-weight: normal;
+}
+
+/* SERVICES SECTION */
+.services {
+    padding: 40px 60px;
+    background-color: #f5f5f5;
+}
+
+.services-title {
+    font-size: 22px;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* BUTTONS */
+.buttons-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+}
+
+.service-button {
+    background: white;
+    text-decoration: none;
+    color: #333;
+    padding: 30px 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.service-button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+
+/* ICON PLACEHOLDER */
+.icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 15px;
+}
+
+.icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.service-button span {
+    font-size: 16px;
+    font-weight: bold;
+    display: block;
+}
+
+/* ==================== MOBILE RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+    .topbar {
+        height: 80px;
+        padding: 0 15px;
+        gap: 12px;
+    }
+
+    .logo {
+        width: 70px;
+        height: 70px;
+    }
+
+    .header-title {
+        font-size: 28px;
+    }
+
+    .hero {
+        height: 300px;
+    }
+
+    .hero-text {
+        right: 20px;
+        left: 20px;
+        max-width: none;
+        top: 50%;
+    }
+
+    .hero-text h1 {
+        font-size: 24px;
+    }
+
+    .hero-text h2 {
+        font-size: 14px;
+    }
+
+    .services {
+        padding: 30px 20px;
+    }
+
+    .services-title {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .buttons-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .service-button {
+        padding: 20px 15px;
+    }
+
+    .icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .service-button span {
+        font-size: 14px;
+    }
+}
+
+/* Mobile Phones (480px and below) */
+@media (max-width: 480px) {
+    html, body {
+        overflow-x: hidden;
+    }
+
+    .topbar {
+        height: 70px;
+        padding: 0 12px;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .logo {
+        width: 60px;
+        height: 60px;
+    }
+
+    .header-title {
+        font-size: 20px;
+    }
+
+    .hero {
+        height: 250px;
+    }
+
+    .hero-text {
+        position: absolute;
+        top: auto;
+        bottom: 15%;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        transform: none;
+        width: calc(100% - 20px);
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.6);
+    }
+
+    .hero-text h1 {
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+
+    .hero-text h2 {
+        font-size: 12px;
+    }
+
+    .services {
+        padding: 20px 15px;
+    }
+
+    .services-title {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+
+    .buttons-container {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .service-button {
+        padding: 20px 15px;
+        border-radius: 6px;
+    }
+
+    .service-button:active {
+        transform: translateY(-3px);
+    }
+
+    .icon {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 10px;
+    }
+
+    .service-button span {
+        font-size: 13px;
+    }
+}
+
+/* Small phones (320px and below) */
+@media (max-width: 320px) {
+    .topbar {
+        height: 60px;
+        padding: 0 10px;
+    }
+
+    .logo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .header-title {
+        font-size: 16px;
+    }
+
+    .hero {
+        height: 200px;
+    }
+
+    .hero-text {
+        bottom: 10%;
+        padding: 12px;
+    }
+
+    .hero-text h1 {
+        font-size: 16px;
+    }
+
+    .hero-text h2 {
+        font-size: 11px;
+    }
+
+    .services-title {
+        font-size: 16px;
+    }
+
+    .icon {
+        width: 40px;
+        height: 40px;
+    }
+}

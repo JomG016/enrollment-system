@@ -1,0 +1,22 @@
+{
+    "dataworkspace.excludedProjects": [
+        "test/test.sqlproj"
+    ],
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "xprotocol",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 33060,
+            "driver": "MySQL",
+            "username": "root",
+            "database": "spict8to10",
+            "name": "spict8to10",
+            "connectionTimeout": 45
+        }
+    ]
+}

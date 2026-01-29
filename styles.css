@@ -1,0 +1,147 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* BACKGROUND IMAGE */
+body {
+    min-height: 100vh;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* OUTER BORDER (NEUST STYLE FRAME) */
+.outer-box {
+    padding: 6px;
+    border-radius: 22px;
+    background: url("bg.png");
+    width: 95%;
+    max-width: 380px;
+}
+
+/* INNER CARD */
+.container {
+    background: url("bg.png");
+    border-radius: 18px;
+    padding: 25px 20px 30px;
+    text-align: center;
+}
+
+/* LOGO HOLDER */
+.logo-box {
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #0052cc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* LOGO IMAGE */
+.logo-box img {
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+}
+
+/* TITLE */
+.container h1 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+    line-height: 1.4;
+    margin-bottom: 28px;
+}
+
+/* GLOW BUTTON */
+.glow-btn {
+    position: relative;
+    padding: 15px 55px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #000;
+    background: linear-gradient(45deg, #ff00ff, #00ffff);
+    background-size: 200% 200%;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    overflow: hidden;
+    z-index: 1;
+    animation: none;
+}
+
+/* ROTATING GLOW */
+.glow-btn::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    background: conic-gradient(
+        #ff00ff,
+        #00ffff,
+        #ff00ff
+    );
+    border-radius: 18px;
+    animation: none;
+    z-index: -2;
+}
+
+/* HOVER ANIMATION */
+.glow-btn:hover::before {
+    animation: spin 2.5s linear infinite;
+}
+
+.glow-btn:hover::after {
+    animation: bgShift 2.5s linear infinite;
+}
+
+.glow-btn:hover {
+    color: white;
+    text-shadow: 0 0 10px white;
+}
+
+/* INNER BUTTON COVER */
+.glow-btn::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    background: linear-gradient(45deg, #ff00ff, #00ffff);
+    background-size: 200% 200%;
+    border-radius: 12px;
+    z-index: -1;
+    animation: none;
+}
+
+/* ANIMATION */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes bgShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* MOBILE */
+@media (max-width: 480px) {
+    .logo-box {
+        width: 95px;
+        height: 95px;
+    }
+
+    .container h1 {
+        font-size: 17px;
+    }
+
+    .glow-btn {
+        font-size: 20px;
+        padding: 14px 48px;
+    }
+}

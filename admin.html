@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CARMEN NHS - Admin Login</title>
+  <link rel="stylesheet" href="admeans.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <div class="card-header">
+        <img class="logo" src="CRNHS.png" alt="CARMEN NHS Logo" />
+        <h1>CARMEN NHS</h1>
+      </div>
+
+      <form id="loginForm" class="form" autocomplete="off" novalidate>
+        <!-- Username -->
+        <label class="label" for="username">USERNAME:</label>
+        <div class="input-wrap">
+          <div class="icon">
+            <img src="username.png" alt="username icon" />
+          </div>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            placeholder="enter your username"
+            required
+          />
+        </div>
+        <div id="userError" class="error"></div>
+
+        <!-- Password -->
+        <div class="row-between">
+          <label class="label" for="password">PASSWORD:</label>
+          <button type="button" id="togglePass" class="toggle">show</button>
+        </div>
+
+        <div class="input-wrap">
+          <div class="icon">
+            <img src="password.png" alt="password icon" />
+          </div>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="enter your password"
+            required
+          />
+        </div>
+        <div id="passError" class="error"></div>
+
+        <!-- Login Button -->
+        <button type="submit" id="loginBtn" class="login-btn">LOGIN</button>
+      </form>
+    </div>
+
+    <!-- Optional character sa kanan (kung gusto mo lagyan later) -->
+    <!-- <img class="character" src="character.png" alt="character" /> -->
+  </div>
+
+  <script src="Admin.js"></script>
+</body>
+</html>
