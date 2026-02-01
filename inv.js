@@ -3,7 +3,7 @@
 // Data source: Firestore inventory + stats_daily (computed by admin dashboard)
 // ==============================
 
-import { db } from "/firebase.js";
+import { db } from "./firebase.js";
 import { auth } from "/firebase-init.js";
 import {
   collection, getDocs, query, where, orderBy, limit,
