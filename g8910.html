@@ -21,7 +21,7 @@
             <input id="fileInput" type="file" accept="image/*" hidden />
           </label>
           <button id="uploadBtn" class="btn green" type="button">UPLOAD</button>
-          <button class="btn green" onclick="window.location.href='SHS.html'">SHS</button>
+          <button class="btn green" type="button" onclick="window.location.href='SHS.html'">SHS</button>
         </div>
 
         <div class="preview">
@@ -39,67 +39,76 @@
 
       <!-- RIGHT PANEL -->
       <div class="panel right">
-        <div class="form-grid">
-          <div class="row">
-            <div class="label">NAME:</div>
-            <input id="name" class="input" placeholder="e.g Salazar, Johannes X." />
-          </div>
 
-          <div class="row">
-            <div class="label">SEX:</div>
-            <input id="sex" class="input" placeholder="e.g. MALE" />
-          </div>
+        <!-- ✅ ADDED FORM WRAPPER -->
+        <form id="enrollmentForm">
+          <div class="form-grid">
+            <div class="row">
+              <div class="label">NAME:</div>
+              <input id="name" class="input" placeholder="e.g Salazar, Johannes X." />
+            </div>
 
-          <div class="row">
-            <div class="label">AGE:</div>
-            <input id="age" class="input" placeholder="e.g. 9" />
-          </div>
+            <div class="row">
+              <div class="label">SEX:</div>
+              <input id="sex" class="input" placeholder="e.g. MALE" />
+            </div>
 
-          <div class="row">
-            <div class="label">GRADE:</div>
-            <input id="grade" class="input" placeholder="e.g. FOUR" />
-          </div>
+            <div class="row">
+              <div class="label">AGE:</div>
+              <input id="age" class="input" placeholder="e.g. 17" />
+            </div>
 
-          <div class="row">
-            <div class="label">SECTION:</div>
-            <input id="section" class="input" placeholder="e.g. MAHARLIKA" />
-          </div>
+            <div class="row">
+              <div class="label">GRADE:</div>
+              <!-- ✅ Change placeholder to number -->
+              <input id="grade" class="input" placeholder="e.g. 8" />
+            </div>
 
-          <div class="row">
-            <div class="label">LRN:</div>
-            <input id="lrn" class="input" placeholder="e.g 888888888888" maxlength="12" />
-          </div>
-        </div>
+            <div class="row">
+              <div class="label">SECTION:</div>
+              <input id="section" class="input" placeholder="e.g. AZURE" />
+            </div>
 
-        <hr class="divider"/>
-
-        <div class="you-are">
-          <div class="you-are-left">
-            <div class="you-are-label">YOU ARE:</div>
-
-            <div class="dropdown">
-              <button id="dropdownToggle" class="dropdown-toggle" type="button" aria-expanded="false">
-                <span class="arrow"></span>
-              </button>
-
-              <div id="dropdownMenu" class="dropdown-menu" role="menu">
-                <button class="dropdown-item" type="button">Incoming Grade 8 REGULAR</button>
-                <button class="dropdown-item" type="button">Incoming Grade 9 REGULAR </button>
-                <button class="dropdown-item" type="button">Incoming Grade 10 REGULAR</button>
-                <button class="dropdown-item" type="button">Incoming Grade 8 SP-ICT</button>
-                <button class="dropdown-item" type="button">Incoming Grade 9 SP-ICT</button>
-                <button class="dropdown-item" type="button">Incoming Grade 10 SP-ICT</button>
-              </div>
+            <div class="row">
+              <div class="label">LRN:</div>
+              <input id="lrn" class="input" placeholder="e.g 888888888888" maxlength="12" />
             </div>
           </div>
 
-          <input id="youAreInput" class="input you-are-input" placeholder="e.g Incoming....." />
-        </div>
+          <hr class="divider"/>
 
-        <div class="actions">
-          <button id="backBtn" class="btn red" type="button">BACK</button>
-          <button id="submitBtn" class="btn green big" type="button">SUBMIT</button>
-        </div>
+          <div class="you-are">
+            <div class="you-are-left">
+              <div class="you-are-label">YOU ARE:</div>
+
+              <div class="dropdown">
+                <button id="dropdownToggle" class="dropdown-toggle" type="button" aria-expanded="false">
+                  <span class="arrow"></span>
+                </button>
+
+                <div id="dropdownMenu" class="dropdown-menu" role="menu">
+                  <button class="dropdown-item" type="button">Incoming Grade 8 REGULAR</button>
+                  <button class="dropdown-item" type="button">Incoming Grade 9 REGULAR</button>
+                  <button class="dropdown-item" type="button">Incoming Grade 10 REGULAR</button>
+                  <button class="dropdown-item" type="button">Incoming Grade 8 SP-ICT</button>
+                  <button class="dropdown-item" type="button">Incoming Grade 9 SP-ICT</button>
+                  <button class="dropdown-item" type="button">Incoming Grade 10 SP-ICT</button>
+                </div>
+              </div>
+            </div>
+
+            <input id="youAreInput" class="input you-are-input" placeholder="e.g Incoming....." />
+          </div>
+
+          <div class="actions">
+            <button id="backBtn" class="btn red" type="button">BACK</button>
+
+            <!-- ✅ IMPORTANT: submit type -->
+            <button id="submitBtn" class="btn green big" type="submit">SUBMIT</button>
+          </div>
+        </form>
+        <!-- ✅ END FORM -->
+
       </div>
 
     </div>
@@ -107,7 +116,9 @@
 
   <!-- Tesseract.js for OCR (client-side) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="script.js"></script>
-  <script type="module" src="test_write.js"></script>
+<script type="module" src="8910.js"></script>
+
+  <!-- Firestore writer -->
+  <!-- <script type="module" src="test_write.js"></script> -->
 </body>
 </html>

@@ -6,6 +6,7 @@
   <title>CNHS Dashboard</title>
   <link rel="stylesheet" href="dash.css" />
 </head>
+
 <body class="day">
   <div class="app">
 
@@ -48,7 +49,7 @@
     <main class="main">
 
       <!-- TOP TABS (GRADE) -->
-      <section class="topTabs glass">
+      <section class="topTabs glass" id="gradeTabs">
         <button class="tab gradeTab active" data-grade="Grade 8">GRADE 8</button>
         <button class="tab gradeTab" data-grade="Grade 9">GRADE 9</button>
         <button class="tab gradeTab" data-grade="Grade 10">GRADE 10</button>
@@ -76,7 +77,7 @@
       <!-- CONTENT PAGES -->
       <section class="pageWrap">
 
-        <!-- ENROLLEES PAGE -->
+        <!-- ENROLLEES PAGE (DEFAULT) -->
         <section class="page active" id="pageEnrollees">
           <div class="tableWrap glass">
             <table class="tbl">
@@ -90,17 +91,23 @@
                   <th>LRN:</th>
                 </tr>
               </thead>
-              <tbody id="tableBody">
-                <!-- rows by JS -->
-              </tbody>
+              <tbody id="tableBody"></tbody>
             </table>
+
+            <div class="emptyState" id="emptyState" hidden>
+              <div class="emptyTitle">No enrollees found</div>
+              <div class="emptySub">Try switching grade/section tabs.</div>
+            </div>
           </div>
         </section>
 
         <!-- GRAPH PAGE -->
         <section class="page" id="pageGraph">
           <div class="graphWrap glass">
-            <h2 class="graphTitle">ENROLLEES PER DAY</h2>
+            <div class="graphHeader">
+              <h2 class="graphTitle">ENROLLEES PER DAY</h2>
+              <div class="graphHint">Per grade, grouped by date.</div>
+            </div>
             <canvas id="dailyChart"></canvas>
           </div>
         </section>
@@ -109,7 +116,27 @@
     </main>
   </div>
 
+  <!-- RESET MODAL -->
+  <div class="modalOverlay" id="resetModal" aria-hidden="true">
+    <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+      <h3 id="resetTitle" class="modalTitle">Do you really want to DELETE the informations?</h3>
+      <p class="modalSub">To continue, enter admin password.</p>
+
+      <div class="modalRow">
+        <input class="modalInput" id="resetPassword" type="password" placeholder="Enter password..." autocomplete="off" />
+      </div>
+
+      <div class="modalActions">
+        <button class="modalBtn ghost" id="btnCancelReset" type="button">Cancel</button>
+        <button class="modalBtn danger" id="btnConfirmReset" type="button">Delete</button>
+      </div>
+
+      <div class="modalError" id="resetError" hidden>Wrong password.</div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="inv.js"></script>
+<script type="module" src="inv.js"></script>
+
 </body>
 </html>

@@ -1,67 +1,39 @@
-const FIXED_USERNAME = "admin300796";
-const FIXED_PASSWORD = "cnhsadmin300796";
+import { auth } from "./firebase.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+await setPersistence(auth, browserLocalPersistence);
 
 const form = document.getElementById("loginForm");
-const usernameInput = document.getElementById("username");
+const emailInput = document.getElementById("username");   // email
 const passwordInput = document.getElementById("password");
 
 const userError = document.getElementById("userError");
-const passError = document.getElementById("passError");
-
 const togglePassBtn = document.getElementById("togglePass");
 
-function clearErrors() {
-  userError.textContent = "";
-  passError.textContent = "";
-}
-
-function setUserError(msg) {
-  userError.textContent = msg;
-}
-
-function setPassError(msg) {
-  passError.textContent = msg;
-}
-
-// Show/Hide password
-togglePassBtn.addEventListener("click", () => {
-  const isHidden = passwordInput.type === "password";
-  passwordInput.type = isHidden ? "text" : "password";
-  togglePassBtn.textContent = isHidden ? "hide" : "show";
-});
-
-// Optional: clear error habang nagta-type
-usernameInput.addEventListener("input", () => {
-  userError.textContent = "";
-});
-
-passwordInput.addEventListener("input", () => {
-  passError.textContent = "";
-});
-
-form.addEventListener("submit", (e) => {
+togglePassBtn?.addEventListener("click", (e) => {
   e.preventDefault();
-  clearErrors();
+  const hidden = passwordInput.type === "password";
+  passwordInput.type = hidden ? "text" : "password";
+  togglePassBtn.textContent = hidden ? "hide" : "show";
+});
 
-  const u = usernameInput.value.trim();
-  const p = passwordInput.value; // keep exact (case-sensitive)
+form.addEventListener("submit", async (e) => {
+  e.preventDefault(); // ✅ prevents URL ?username=&password=
+  userError.textContent = "";
 
-  let ok = true;
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
 
-  // Validate username
-  if (u !== FIXED_USERNAME) {
-    setUserError("Your Username is Incorrect");
-    ok = false;
-  }
-
-  // Validate password
-  if (p !== FIXED_PASSWORD) {
-    setPassError("Your Password is Incorrect");
-    ok = false;
-  }
-
-  // If both correct -> redirect
-  if (ok) {
-    window.location.href = "dashboard.html";
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    window.location.assign("./dashboard.html");
+  } catch (err) {
+    console.error(err);
+    // ✅ show real reason
+    userError.textContent = err.code || "Login failed";
   }
 });

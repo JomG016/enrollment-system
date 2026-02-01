@@ -1,196 +1,307 @@
+import { db, authReady } from "./firebase.js";
+import {
+  addDoc,
+  collection,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const form = document.getElementById("enrollmentForm") || document.querySelector("form");
+
+const norm = (s) => (s || "").toString().trim();
+const upper = (s) => norm(s).toUpperCase();
+
+// SHS ROUTES
+const SHS_ROUTES = {
+  "HUMMS A": "HUMMS A",
+  "HUMMS B": "HUMMS B",
+  "ABM": "ABM",
+  "TVL-ICT": "TVL-ICT",
+  "TVL-HE": "TVL-HE"
+};
+
+function getVal(id) {
+  return document.getElementById(id)?.value ?? "";
+}
+
+// ✅ NEW: handleSubmit that works for form submit OR button click
+async function handleSubmit(e) {
+  if (e?.preventDefault) e.preventDefault();
+
+  try {
+    await authReady;
+
+    const name = norm(getVal("name"));
+    const sex = norm(getVal("sex"));
+    const age = norm(getVal("age"));
+    const section = upper(getVal("section"));
+    const lrn = norm(getVal("lrn"));
+
+    if (!SHS_ROUTES[section]) {
+      alert("Invalid SHS section");
+      return;
+    }
+
+    await addDoc(collection(db, "inventory"), {
+      track: "SHS",
+      name,
+      sex,
+      age,
+      lrn,
+      inputGrade: "Grade 11",
+      grade: "Grade 12",
+      section,
+      createdAt: serverTimestamp()
+    });
+
+    alert("✅ SHS Enrollment saved");
+
+    // reset if form exists, else clear fields manually
+    if (form && form.reset) form.reset();
+    else {
+      ["name", "sex", "age", "grade", "section", "lrn", "youAreInput"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ FIREBASE ERROR. Check console.");
+  }
+}
+
+// Attach submit handler if a form exists
+if (form) {
+  form.addEventListener("submit", handleSubmit);
+}
+
+// ✅ IMPORTANT: SHS.html has submitBtn type=button, so we bind click
+const submitBtn = document.getElementById("submitBtn");
+if (submitBtn) {
+  submitBtn.addEventListener("click", handleSubmit);
+}
+
+
+// =====================================================
+// ✅ ADDED ONLY: UPLOAD PREVIEW + OCR AUTOFILL (FIXED)
+// =====================================================
 const fileInput = document.getElementById("fileInput");
 const uploadBtn = document.getElementById("uploadBtn");
 const previewImg = document.getElementById("previewImg");
 const previewPlaceholder = document.getElementById("previewPlaceholder");
 const logBox = document.getElementById("logBox");
 
-const backBtn = document.getElementById("backBtn");
-const submitBtn = document.getElementById("submitBtn");
-
-const dropdownToggle = document.getElementById("dropdownToggle");
-const dropdownMenu = document.getElementById("dropdownMenu");
-const youAreInput = document.getElementById("youAreInput");
-
-const fields = {
-  name: document.getElementById("name"),
-  sex: document.getElementById("sex"),
-  age: document.getElementById("age"),
-  grade: document.getElementById("grade"),
-  section: document.getElementById("section"),
-  lrn: document.getElementById("lrn"),
-};
-
-let selectedFile = null;
-let previewDataUrl = null;
-
-// ---------- Preview image ----------
-fileInput.addEventListener("change", (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  selectedFile = file;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    previewDataUrl = reader.result;
-    previewImg.src = previewDataUrl;
-    previewImg.style.display = "block";
-    previewPlaceholder.style.display = "none";
-  };
-  reader.readAsDataURL(file);
-
-  logBox.textContent = ""; // clear black box
-});
-
-// ---------- Dropdown ----------
-function closeDropdown() {
-  dropdownMenu.classList.remove("open");
-  dropdownToggle.setAttribute("aria-expanded", "false");
+function clearLog() {
+  if (logBox) logBox.textContent = "";
 }
 
-dropdownToggle.addEventListener("click", (e) => {
-  e.stopPropagation();
-  const isOpen = dropdownMenu.classList.toggle("open");
-  dropdownToggle.setAttribute("aria-expanded", String(isOpen));
-});
-
-dropdownMenu.addEventListener("click", (e) => {
-  const btn = e.target.closest(".dropdown-item");
-  if (!btn) return;
-  youAreInput.value = btn.textContent.trim();
-  closeDropdown();
-});
-
-document.addEventListener("click", closeDropdown);
-
-// ---------- Navigation ----------
-backBtn.addEventListener("click", () => {
-  window.location.href = "main.html";
-});
-
-// ---------- Validation ----------
-function validateForm() {
-  const errors = [];
-
-  if (!fields.name.value.trim()) errors.push("Name is required");
-  if (!fields.sex.value.trim()) errors.push("Sex is required");
-  if (!fields.age.value.trim()) errors.push("Age is required");
-  if (!fields.grade.value.trim()) errors.push("Grade is required");
-  if (!fields.section.value.trim()) errors.push("Section is required");
-  if (!fields.lrn.value.trim() || fields.lrn.value.length !== 12)
-    errors.push("LRN must be exactly 12 digits");
-  if (!youAreInput.value.trim()) errors.push("Please select who you are");
-  if (!selectedFile) errors.push("Please upload a file");
-
-  return errors;
+function logLine(msg) {
+  if (!logBox) return;
+  logBox.textContent += (logBox.textContent ? "\n" : "") + msg;
 }
 
-submitBtn.addEventListener("click", () => {
-  const validationErrors = validateForm();
-
-  if (validationErrors.length > 0) {
-    alert("Please complete all requirements:\n\n" + validationErrors.join("\n"));
-    return;
-  }
-
-  window.location.href = "finish.html";
-});
-
-
-// ✅✅✅ Recognizing log (COUNTS UP FOREVER UNTIL STOPPED) ✅✅✅
-function startRecognizingCounter() {
-  logBox.textContent = "";
-  let i = 1;
-
-  const interval = setInterval(() => {
-    logBox.textContent += `recognizing text (${i}).........\n`;
-    logBox.scrollTop = logBox.scrollHeight;
-    i++; // 1,2,3,4,... 11,12,13...
-  }, 180);
-
-  return () => clearInterval(interval);
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (val === undefined || val === null) return;
+  const v = String(val).trim();
+  if (v) el.value = v;
 }
 
-
-// ---------- LRN extractor ----------
-function extractLRN12(text) {
-  const matches = text.match(/\d+/g) || [];
-  return matches.find((m) => m.length === 12) || "";
+function bestLRN(text) {
+  const matches = text.match(/\b\d{10,12}\b/g) || [];
+  if (matches.length === 0) return "";
+  const m12 = matches.find(x => x.length === 12);
+  return m12 || matches[0];
 }
 
-// ---------- OCR helpers ----------
-function normalizeOCRText(t) {
-  return (t || "")
-    .replace(/\r/g, "\n")
-    .replace(/[^\S\n]+/g, " ")
+function cutAtKeywords(s) {
+  return (s || "")
+    .replace(/\b(SEX|AGE|GRADE|SECTION|LRN)\b.*$/i, "")
     .trim();
 }
 
-function valueAfterLabel(text, label) {
-  const re = new RegExp(
-    `${label}\\s*:\\s*(.*?)\\s*(?=\\b(Name|Age|Sex|Grade|Section|LRN)\\b\\s*:|\\n|$)`,
-    "i"
-  );
-  const m = text.match(re);
-  if (!m) return "";
-  return (m[1] || "").replace(/[_]+/g, " ").trim();
+function extractLineValue(lines, label) {
+  const re = new RegExp(`^\\s*${label}\\s*[:\\-]?\\s*(.+)$`, "i");
+  for (const ln of lines) {
+    const m = ln.match(re);
+    if (m) return cutAtKeywords(m[1]);
+  }
+  return "";
 }
 
-function parseFieldsFromOCR(rawText) {
-  const text = normalizeOCRText(rawText);
+function parseOCRToFields(rawText) {
+  const t = String(rawText || "").toUpperCase().replace(/\r/g, "");
+  const lines = t.split("\n").map(x => x.trim()).filter(Boolean);
+  const joined = lines.join(" ");
 
-  return {
-    name: valueAfterLabel(text, "Name"),
-    sex: valueAfterLabel(text, "Sex"),
-    age: valueAfterLabel(text, "Age"),
-    grade: valueAfterLabel(text, "Grade"),
-    section: valueAfterLabel(text, "Section"),
-    lrn: extractLRN12(text), // ONLY 12 digits
-  };
-}
+  let name = extractLineValue(lines, "NAME");
+  let sex = extractLineValue(lines, "SEX");
+  let age = extractLineValue(lines, "AGE");
+  let section = "";
 
-function fillFieldIfFound(inputEl, value) {
-  if (value) inputEl.value = value;
-}
-
-// ---------- OCR ----------
-async function runOCR(imageDataUrl) {
-  const result = await Tesseract.recognize(imageDataUrl, "eng");
-  return result?.data?.text || "";
-}
-
-
-// ✅✅✅ Upload behavior (start counter, stop after OCR/autofill) ✅✅✅
-uploadBtn.addEventListener("click", async () => {
-  if (!selectedFile || !previewDataUrl) {
-    alert("Please choose a file first.");
-    return;
+  if (!name) {
+    const m = joined.match(/NAME[:\s]+(.+?)(?=\b(SEX|AGE|GRADE|SECTION|LRN)\b|$)/i);
+    if (m) name = cutAtKeywords(m[1]);
   }
 
-  const stopRecognizing = startRecognizingCounter();
+  if (!sex) {
+    const m = joined.match(/\b(MALE|FEMALE)\b/i);
+    if (m) sex = m[1];
+  }
 
-  try {
-    const ocrText = await runOCR(previewDataUrl);
-    const parsed = parseFieldsFromOCR(ocrText);
+  if (!age) {
+    const m = joined.match(/AGE[:\s]+(\d{1,2})/i);
+    if (m) age = m[1];
+  } else {
+    const m = age.match(/\d{1,2}/);
+    if (m) age = m[0];
+  }
 
-    fillFieldIfFound(fields.name, parsed.name);
-    fillFieldIfFound(fields.sex, parsed.sex);
-    fillFieldIfFound(fields.age, parsed.age);
-    fillFieldIfFound(fields.grade, parsed.grade);
-    fillFieldIfFound(fields.section, parsed.section);
+  // SHS section keywords
+  const sec1 = joined.match(/\b(HUMMS\s*A|HUMMS\s*B|ABM|TVL-ICT|TVL-HE|ICT|HE)\b/i);
+  if (sec1) {
+    const s = sec1[1].replace(/\s+/g, " ").toUpperCase();
+    if (s === "ICT") section = "TVL-ICT";
+    else if (s === "HE") section = "TVL-HE";
+    else section = s;
+  }
 
-    // LRN rule: EXACTLY 12 digits or do not fill
-    if (parsed.lrn.length === 12) {
-      fields.lrn.value = parsed.lrn;
+  let lrn = extractLineValue(lines, "LRN");
+  if (!lrn) {
+    const m = joined.match(/LRN[:\s]+(\d{10,12})/i);
+    if (m) lrn = m[1];
+    if (!lrn) lrn = bestLRN(joined);
+  }
+
+  return { name, sex, age, section, lrn };
+}
+
+// Preview on choose
+if (fileInput) {
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    if (previewImg) {
+      previewImg.src = URL.createObjectURL(file);
+      previewImg.style.display = "block";
     }
-  } catch (e) {
-    console.error(e);
-  } finally {
-    stopRecognizing();
-  }
-});
+    if (previewPlaceholder) previewPlaceholder.style.display = "none";
 
-// ---------- LRN input restriction ----------
-fields.lrn.addEventListener("input", () => {
-  fields.lrn.value = fields.lrn.value.replace(/\D/g, "").slice(0, 12);
-});
+    clearLog();
+    logLine("🖼️ Image selected. Click UPLOAD to auto-fill.");
+  });
+}
+
+// OCR on upload click (LINE-BY-LINE %)
+if (uploadBtn) {
+  uploadBtn.addEventListener("click", async () => {
+    const file = fileInput?.files?.[0];
+    if (!file) {
+      alert("Please choose an image first.");
+      return;
+    }
+    if (typeof Tesseract === "undefined") {
+      alert("Tesseract.js not loaded.");
+      return;
+    }
+
+    clearLog();
+    let lastPct = 0;
+    logLine("OCR LOADING 0%");
+
+    try {
+      const result = await Tesseract.recognize(file, "eng", {
+        logger: (m) => {
+          if (m?.status === "recognizing text" && typeof m.progress === "number") {
+            const pct = Math.max(1, Math.min(100, Math.floor(m.progress * 100)));
+
+            // ✅ append EVERY percent, once
+            while (lastPct < pct) {
+              lastPct++;
+              logLine(`OCR LOADING ${lastPct}%`);
+            }
+          }
+        }
+      });
+
+      const text = result?.data?.text || "";
+      const parsed = parseOCRToFields(text);
+
+      setVal("name", parsed.name);
+      setVal("sex", parsed.sex);
+      setVal("age", parsed.age);
+      setVal("section", parsed.section);
+      setVal("lrn", parsed.lrn);
+
+      logLine("✅ AUTOFILL DONE");
+    } catch (err) {
+      console.error(err);
+      logLine("❌ OCR failed. Check console.");
+      alert("OCR failed. Try clearer image.");
+    }
+  });
+}
+
+
+// ================================
+// ✅ DROPDOWN TOGGLE (ALWAYS CLICKABLE)
+// (OUTSIDE upload handler)
+// ================================
+(() => {
+  const toggleBtn = document.getElementById("dropdownToggle");
+  const menu = document.getElementById("dropdownMenu");
+  const youAre = document.getElementById("youAreInput");
+
+  if (!toggleBtn || !menu || !youAre) return;
+
+  // Make sure it appears on top even if CSS is strict
+  menu.style.display = "none";
+  menu.style.position = "absolute";
+  menu.style.zIndex = "99999";
+  menu.style.pointerEvents = "auto";
+
+  function openMenu() {
+    menu.style.display = "block";
+    toggleBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeMenu() {
+    menu.style.display = "none";
+    toggleBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function isOpen() {
+    return menu.style.display === "block";
+  }
+
+  toggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (isOpen()) closeMenu();
+    else openMenu();
+  });
+
+  menu.querySelectorAll(".dropdown-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      youAre.value = btn.textContent.trim();
+      closeMenu();
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!menu.contains(e.target) && !toggleBtn.contains(e.target)) closeMenu();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+})();
+
+// Back button: redirect to main.html
+const backBtn = document.getElementById("backBtn");
+if (backBtn) {
+  backBtn.addEventListener("click", () => {
+    window.location.href = "main.html";
+  });
+}
