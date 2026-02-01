@@ -1,6 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// firebase-init.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCChNAgfuYlFlkx172xMVPABj_qyQWPup8",
@@ -12,13 +13,9 @@ const firebaseConfig = {
   measurementId: "G-0LWBVK62F5"
 };
 
-const app = initializeApp(firebaseConfig);
-
+export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-export const authReady = new Promise((resolve) => {
-  onAuthStateChanged(auth, (user) => resolve(user));
-});
-
-signInAnonymously(auth).catch(console.error);
+// ✅ para hindi nawawala login pag lipat ng page
+await setPersistence(auth, browserLocalPersistence);
