@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 [build]
   publish = "."
 
@@ -6,12 +5,3 @@
   from = "/"
   to = "/main.html"
   status = 200
-=======
-[build]
-  publish = "."
-
-[[redirects]]
-  from = "/"
-  to = "/main.html"
-  status = 200
->>>>>>> 9515050359861c477139cabd0fd115ff558650da
