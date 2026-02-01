@@ -19,3 +19,12 @@ export const auth = getAuth(app);
 
 // ✅ para hindi nawawala login pag lipat ng page
 await setPersistence(auth, browserLocalPersistence);
+
+// ✅ authReady: resolve when auth state is known
+export const authReady = new Promise((resolve) => {
+  const unsub = auth.onAuthStateChanged(() => {
+    unsub();
+    resolve();
+  });
+});
+
