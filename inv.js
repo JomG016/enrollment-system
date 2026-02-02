@@ -3,17 +3,12 @@
 // Data source: Firestore inventory + stats_daily (computed by admin dashboard)
 // ==============================
 
-import { db, auth, authReady } from "./firebase-init.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { db } from "./firebase.js";
 import {
   collection, getDocs, query, where, orderBy, limit,
   doc, writeBatch, serverTimestamp, FieldPath,
-  onSnapshot, getDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 // required password for reset
 const RESET_PASSWORD = "CNHSadmin0nly";
@@ -21,23 +16,6 @@ const RESET_PASSWORD = "CNHSadmin0nly";
 // helpers
 const qs = (s) => document.querySelector(s);
 const qsa = (s) => [...document.querySelectorAll(s)];
-
-// ---------------------------
-// ✅ AUTH + ADMIN CHECK (NO EXTRA LOGIN)
-// ---------------------------
-let __isAdmin = false;
-
-async function checkAdmin(uid){
-  const ref = doc(db, "admins", uid);
-  const snap = await getDoc(ref);
-  return snap.exists();
-}
-
-function requireAdminOrRedirect(){
-  // If not admin, bounce back to admin login page
-  alert("Admin access required. Please login again.");
-  window.location.href = "admin.html";
-}
 
 // ---------------------------
 // Pages
@@ -73,7 +51,7 @@ function toggleTheme(){
 }
 
 // ---------------------------
-// Tabs + Adviser mapping
+// Tabs + Adviser mapping (from PPT)
 // ---------------------------
 const gradeSections = {
   "Grade 8": ["PYTHON","EARTH","JUPITER","VENUS","NEPTUNE"],
@@ -136,18 +114,18 @@ function renderSectionTabs(){
     b.type = "button";
     b.textContent = sec;
 
-    b.addEventListener("click", () => {
+    b.addEventListener("click", async () => {
       activeSection = sec;
       qsa(".sectionTab").forEach(x => x.classList.toggle("active", x.textContent === sec));
       updateAdviser();
-      listenInventoryForActive(); // realtime reload
+      await renderTable();
     });
 
     wrap.appendChild(b);
   });
 
   updateAdviser();
-  listenInventoryForActive();
+  renderTable(); // fire and forget
 }
 
 // ---------------------------
@@ -179,25 +157,52 @@ function dateIdFromTimestamp(ts){
   return dateIdFromDate(d);
 }
 
-// =====================================================
-// ✅ TABLE: realtime listen (NO orderBy to avoid index)
-// =====================================================
-let unsubInventory = null;
+// ---------------------------
+// TABLE: Firestore inventory
+// ---------------------------
+async function fetchInventoryForActive(){
+  // You can increase limit if you want
+  const qy = query(
+    collection(db, "inventory"),
+    where("grade", "==", activeGrade),
+    where("section", "==", activeSection),
+    orderBy("createdAt", "desc"),
+    limit(250)
+  );
 
-function sortByCreatedAtDesc(rows){
-  return rows.sort((a,b) => {
-    const ad = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
-    const bd = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
-    return bd - ad;
-  });
+  const snap = await getDocs(qy);
+  const rows = [];
+  snap.forEach(ds => rows.push({ id: ds.id, ...ds.data() }));
+  return rows;
 }
 
-function renderRowsToTable(rows){
+async function renderTable(){
   const tbody = qs("#tableBody");
   const empty = qs("#emptyState");
   tbody.innerHTML = "";
 
-  if(!rows || rows.length === 0){
+  let rows = [];
+ try{
+  rows = await fetchInventoryForActive();
+}catch(err){
+  console.error(err);
+
+  // ✅ ADDED: show exact firestore error on UI
+  const msg = String(err?.message || err);
+  const box = document.getElementById("emptyState");
+  if(box){
+    box.hidden = false;
+    box.textContent = msg.includes("index")
+      ? "FIRESTORE INDEX REQUIRED: gumawa ng composite index (grade, section, createdAt)."
+      : msg.includes("permission")
+        ? "PERMISSION DENIED: dashboard needs admin UID in /admins/{uid}."
+        : ("ERROR: " + msg);
+  }
+
+  return;
+}
+
+  if(rows.length === 0){
     empty.hidden = false;
     return;
   }
@@ -217,40 +222,6 @@ function renderRowsToTable(rows){
   });
 }
 
-function listenInventoryForActive(){
-  if(!__isAdmin) return;
-
-  if(typeof unsubInventory === "function"){
-    unsubInventory();
-    unsubInventory = null;
-  }
-
-  const empty = qs("#emptyState");
-  empty.hidden = true;
-
-  const qy = query(
-    collection(db, "inventory"),
-    where("grade", "==", activeGrade),
-    where("section", "==", activeSection)
-  );
-
-  unsubInventory = onSnapshot(qy, (snap) => {
-    const rows = [];
-    snap.forEach(ds => rows.push({ id: ds.id, ...ds.data() }));
-    renderRowsToTable(sortByCreatedAtDesc(rows));
-  }, (err) => {
-    console.error("Inventory listen error:", err);
-    empty.hidden = false;
-
-    const t = qs("#emptyState .emptyTitle");
-    const s = qs("#emptyState .emptySub");
-    if(t) t.textContent = "Cannot load enrollees";
-    if(s) s.textContent = (err?.code === "permission-denied")
-      ? "Permission denied. Admin login required."
-      : "Check console (F12) for details.";
-  });
-}
-
 // ---------------------------
 // GRAPH: Option B (FREE)
 // rebuild from inventory -> write stats_daily -> render from stats_daily
@@ -259,8 +230,6 @@ const GRADES = ["Grade 8","Grade 9","Grade 10","Grade 12"];
 let chart = null;
 
 async function rebuildStatsDaily(daysBack = 30){
-  if(!__isAdmin) return;
-
   const end = new Date();
   end.setHours(23,59,59,999);
 
@@ -268,6 +237,7 @@ async function rebuildStatsDaily(daysBack = 30){
   start.setDate(start.getDate() - (daysBack - 1));
   start.setHours(0,0,0,0);
 
+  // Query inventory in date range (admin-only)
   const qy = query(
     collection(db, "inventory"),
     where("createdAt", ">=", start),
@@ -277,6 +247,7 @@ async function rebuildStatsDaily(daysBack = 30){
 
   const snap = await getDocs(qy);
 
+  // dateId -> counts
   const map = new Map();
 
   snap.forEach(ds => {
@@ -294,17 +265,18 @@ async function rebuildStatsDaily(daysBack = 30){
     map.get(dateId)[grade] += 1;
   });
 
+  // Write stats_daily
   const batch = writeBatch(db);
+
   for(const [dateId, counts] of map.entries()){
     const ref = doc(db, "stats_daily", dateId);
     batch.set(ref, { ...counts, updatedAt: serverTimestamp() }, { merge: true });
   }
+
   await batch.commit();
 }
 
 async function fetchStatsDaily(daysBack = 30){
-  if(!__isAdmin) return { labels: [], rows: [] };
-
   const end = new Date();
   end.setHours(23,59,59,999);
 
@@ -335,8 +307,6 @@ async function fetchStatsDaily(daysBack = 30){
 }
 
 async function renderGraphFromStatsDaily(daysBack = 30){
-  if(!__isAdmin) return;
-
   const { labels, rows } = await fetchStatsDaily(daysBack);
 
   const datasets = GRADES.map(g => ({
@@ -361,6 +331,7 @@ async function renderGraphFromStatsDaily(daysBack = 30){
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
+        legend: { labels: { font: { weight: "bold" } } },
         tooltip: { mode: "index", intersect: false }
       },
       interaction: { mode: "nearest", axis: "x", intersect: false },
@@ -375,8 +346,6 @@ async function renderGraphFromStatsDaily(daysBack = 30){
 // RESET: delete BOTH inventory + stats_daily (admin only)
 // ---------------------------
 async function deleteCollectionAll(collName, chunkSize = 400){
-  if(!__isAdmin) return;
-
   while(true){
     const snap = await getDocs(query(collection(db, collName), limit(chunkSize)));
     if(snap.empty) break;
@@ -403,8 +372,6 @@ function closeResetModal(){
 }
 
 async function confirmReset(){
-  if(!__isAdmin) return;
-
   const pw = qs("#resetPassword").value;
   const err = qs("#resetError");
 
@@ -413,6 +380,7 @@ async function confirmReset(){
     return;
   }
 
+  // delete firestore collections (admin-only)
   try{
     await deleteCollectionAll("inventory");
     await deleteCollectionAll("stats_daily");
@@ -423,8 +391,10 @@ async function confirmReset(){
   }
 
   closeResetModal();
-  listenInventoryForActive();
+  await renderTable();
 
+  // refresh graph view if currently open
+  // (safe even if not open)
   try{
     await rebuildStatsDaily(30);
     await renderGraphFromStatsDaily(30);
@@ -439,15 +409,18 @@ function wireSidebar(){
     window.location.href = "main.html";
   });
 
-  qs("#btnEnrollees").addEventListener("click", () => {
+  qs("#btnEnrollees").addEventListener("click", async () => {
     setActiveSidebar("btnEnrollees");
     showPage("pageEnrollees");
-    listenInventoryForActive();
+    await renderTable();
   });
 
   qs("#btnGraph").addEventListener("click", async () => {
     setActiveSidebar("btnGraph");
     showPage("pageGraph");
+
+    // FREE plan flow:
+    // rebuild stats_daily from inventory, then render graph from stats_daily
     await rebuildStatsDaily(30);
     await renderGraphFromStatsDaily(30);
   });
@@ -464,6 +437,7 @@ function wireGradeTabs(){
   qsa(".gradeTab").forEach(btn => {
     btn.addEventListener("click", () => {
       activeGrade = btn.dataset.grade;
+
       qsa(".gradeTab").forEach(x => x.classList.toggle("active", x.dataset.grade === activeGrade));
       activeSection = (gradeSections[activeGrade] || [])[0] || "";
       renderSectionTabs();
@@ -493,7 +467,7 @@ function wireModal(){
 }
 
 // ---------------------------
-// Init (wait for auth session from admin.html)
+// Init
 // ---------------------------
 (function init(){
   const saved = localStorage.getItem("cnhs_theme");
@@ -508,25 +482,6 @@ function wireModal(){
 
   qsa(".gradeTab").forEach(x => x.classList.toggle("active", x.dataset.grade === activeGrade));
 
-  // ✅ IMPORTANT: dashboard does NOT login here.
-  // It only checks if you're already logged in (from admin.html).
-  onAuthStateChanged(auth, async (user) => {
-    if(!user){
-      console.log("❌ DASHBOARD AUTH: NOT LOGGED IN");
-      requireAdminOrRedirect();
-      return;
-    }
-
-    console.log("✅ DASHBOARD AUTH UID:", user.uid);
-
-    __isAdmin = await checkAdmin(user.uid);
-    if(!__isAdmin){
-      console.log("❌ NOT ADMIN allowlisted");
-      requireAdminOrRedirect();
-      return;
-    }
-
-    console.log("✅ ADMIN VERIFIED");
-    renderSectionTabs();
-  });
+  renderSectionTabs();
 })();
+// ✅ ADDED: fallback query if composite index not ready
