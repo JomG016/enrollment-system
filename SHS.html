@@ -3,108 +3,147 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Online Enrollment - SP-ICT</title>
-  <link rel="stylesheet" href="SHS.css"/>
+  <title>CNHS Enrollment • SHS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="enroll-modern.css"/>
 </head>
+
 <body>
-  <div class="page">
-    <div class="header">
-      <h1>ONLINE ENROLLMENT FOR GRADE SENIOR HIGH SCHOOL</h1>
-    </div>
-
-    <div class="content">
-      <!-- LEFT PANEL -->
-      <div class="panel left">
-        <div class="file-actions">
-          <label class="btn primary">
-            CHOOSE FILE
-            <input id="fileInput" type="file" accept="image/*" hidden />
-          </label>
-          <button id="uploadBtn" class="btn green" type="button">UPLOAD</button>
-          <button class="btn green" onclick="window.location.href='g8910.html'">JHS</button>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <img src="MINI.png" alt="CNHS Logo">
+        <div>
+          <h1>Online Enrollment • SHS</h1>
+          <p>Senior High School</p>
         </div>
-
-        <div class="preview">
-          <div class="preview-title">PREVIEW</div>
-          <div class="preview-box">
-            <img id="previewImg" alt="Preview" />
-            <div id="previewPlaceholder" class="preview-placeholder">
-              No image selected
-            </div>
-          </div>
-        </div>
-
-        <div class="log-box" id="logBox" aria-live="polite"></div>
       </div>
 
-      <!-- RIGHT PANEL -->
-      <div class="panel right">
-        <div class="form-grid">
-          <div class="row">
-            <div class="label">NAME:</div>
-            <input id="name" class="input" placeholder="e.g Salazar, Johannes X." />
-          </div>
+      <div class="pills">
+        <a class="pill" href="index.html">Home</a>
+        <a class="pill" href="g8910.html">Go to JHS</a>
+      </div>
+    </div>
 
-          <div class="row">
-            <div class="label">SEX:</div>
-            <input id="sex" class="input" placeholder="e.g. MALE" />
-          </div>
-
-          <div class="row">
-            <div class="label">AGE:</div>
-            <input id="age" class="input" placeholder="e.g. 9" />
-          </div>
-
-          <div class="row">
-            <div class="label">GRADE:</div>
-            <input id="grade" class="input" placeholder="e.g. FOUR" />
-          </div>
-
-          <div class="row">
-            <div class="label">SECTION:</div>
-            <input id="section" class="input" placeholder="e.g. MAHARLIKA" />
-          </div>
-
-          <div class="row">
-            <div class="label">LRN:</div>
-            <input id="lrn" class="input" placeholder="e.g 888888888888" maxlength="12" />
+    <div class="grid">
+      <!-- LEFT: Upload / Preview -->
+      <div class="card sticky">
+        <div class="cardHead">
+          <div>
+            <p class="title">Scan / Upload Form</p>
+            <p class="hint">Choose image → Upload to auto-fill fields</p>
           </div>
         </div>
 
-        <hr class="divider"/>
+        <div class="cardBody">
+          <div class="actionRow">
+            <label class="btn primary">
+              Choose File
+              <input id="fileInput" type="file" accept="image/*" hidden />
+            </label>
 
-        <div class="you-are">
-          <div class="you-are-left">
-            <div class="you-are-label">YOU ARE:</div>
+            <button id="uploadBtn" class="btn" type="button">Upload & Auto-fill</button>
+          </div>
 
-            <div class="dropdown">
-              <button id="dropdownToggle" class="dropdown-toggle" type="button" aria-expanded="false">
-                <span class="arrow"></span>
-              </button>
+          <div class="preview">
+            <div class="previewTop">
+              <span>Preview</span>
+              <span style="color:rgba(107,68,82,.8); font-weight:800; font-size:12px;">OCR Log below</span>
+            </div>
 
-              <div id="dropdownMenu" class="dropdown-menu" role="menu">
-                <button class="dropdown-item" type="button">Incoming 12 HUMMS A</button>
-                <button class="dropdown-item" type="button">Incoming 12 HUMMS B </button>
-                <button class="dropdown-item" type="button">Incoming 12 ABM </button>
-                <button class="dropdown-item" type="button">Incoming 12 ICT</button>
-                <button class="dropdown-item" type="button">Incoming 12 HE</button>
+            <div class="previewBox">
+              <img id="previewImg" alt="Preview" />
+              <div id="previewPlaceholder" class="placeholder">No image selected</div>
+            </div>
+
+            <div class="log" id="logBox" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Form -->
+      <div class="card">
+        <div class="cardHead">
+          <div>
+            <p class="title">Student Details</p>
+            <p class="hint">Check the info before submitting</p>
+          </div>
+        </div>
+
+        <div class="cardBody">
+          <!-- keep form so submit works + consistent -->
+          <form id="enrollmentForm">
+            <div class="formGrid">
+              <div class="field">
+                <div class="label">NAME</div>
+                <input id="name" class="input" placeholder="e.g. Salazar, Johannes X." />
+              </div>
+
+              <div class="field">
+                <div class="label">SEX</div>
+                <input id="sex" class="input" placeholder="e.g. FEMALE" />
+              </div>
+
+              <div class="field">
+                <div class="label">AGE</div>
+                <input id="age" class="input" placeholder="e.g. 17" />
+              </div>
+
+              <div class="field">
+                <div class="label">GRADE</div>
+                <input id="grade" class="input" placeholder="e.g. 11" />
+              </div>
+
+              <div class="field">
+                <div class="label">SECTION</div>
+                <input id="section" class="input" placeholder="e.g. HUMMS A / TVL-ICT" />
+              </div>
+
+              <div class="field">
+                <div class="label">LRN</div>
+                <input id="lrn" class="input" placeholder="e.g. 888888888888" maxlength="12" />
               </div>
             </div>
-          </div>
 
-          <input id="youAreInput" class="input you-are-input" placeholder="e.g Incoming....." />
-        </div>
+            <hr class="hr"/>
 
-        <div class="actions">
-          <button id="backBtn" class="btn red" type="button">BACK</button>
-          <button id="submitBtn" class="btn green big" type="button">SUBMIT</button>
+            <div class="youRow">
+              <div class="label">YOU ARE</div>
+
+              <div class="dropWrap">
+                <button id="dropdownToggle" class="dropBtn" type="button" aria-expanded="false"></button>
+
+                <div id="dropdownMenu" class="dropdown-menu" role="menu">
+                  <button class="dropdown-item" type="button">Incoming 12 HUMMS A</button>
+                  <button class="dropdown-item" type="button">Incoming 12 HUMMS B</button>
+                  <button class="dropdown-item" type="button">Incoming 12 ABM</button>
+                  <button class="dropdown-item" type="button">Incoming 12 ICT</button>
+                  <button class="dropdown-item" type="button">Incoming 12 HE</button>
+                  <button class="dropdown-item" type="button">Incoming 12 AFA</button>
+                </div>
+
+                <input id="youAreInput" class="input" placeholder="Select from dropdown..." />
+              </div>
+            </div>
+
+            <div class="actions">
+              <button id="backBtn" class="btn danger" type="button">Back</button>
+              <!-- keep this id; your script binds click if needed -->
+              <button id="submitBtn" class="btn submit" type="submit">Submit Enrollment</button>
+            </div>
+          </form>
         </div>
       </div>
-
     </div>
+
+    <div class="footer">© Carmen National High School • Enrollment System</div>
   </div>
- <button onclick="window.location.href='SHS.html'">Senior High School</button>
- <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script type="module" src="script.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>

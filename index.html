@@ -1,58 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>CNHS Portal</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNHS Portal</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Modern font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
-    <!-- TOP PINK BAR / HEADER -->
-    <header class="topbar">
-        <img src="MINI.png" alt="CNHS Logo" class="logo">
-        <h1 class="header-title">Carmen National High School</h1>
-    </header>
+  <!-- OPENING ANIMATION / INTRO -->
+  <!-- LIQUID MORPH iOS-STYLE INTRO -->
+<div class="intro" aria-hidden="true">
+  <div class="liquid-layer">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <div class="blob b4"></div>
+  </div>
 
-    <!--BIG IMAGE -->
-    <section class="hero">
-        <img src="canhs.png" alt="School Image" class="hero-bg">
+  <div class="glass-splash">
+    <img src="MINI.png" class="splash-logo" alt="">
+    <div class="splash-title">CNHS Portal</div>
+    <div class="splash-sub">Enrollment System</div>
+    <div class="splash-dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</div>
 
-        <!-- BASIC INFOS -->
-        <div class="hero-text">
-            <h1>WE WANT YOU TO BE PART OF CNHS!</h1>
-            <h2>Carmen National High School offers most convenient way to build and reach your dreams.</h2>
+
+  <!-- HEADER (simple lang, no buttons) -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img src="MINI.png" alt="CNHS Logo" class="logo" />
+        <div class="brand-text">
+          <div class="brand-title">Carmen National High School</div>
+          <div class="brand-subtitle">Student Portal • Enrollment System</div>
         </div>
-    </section>
+      </div>
+    </div>
+  </header>
 
-    <!-- CNHS LIST DITO -->
-    <section class="services">
-        <h2 class="services-title">CNHS LIST:</h2>
+  <!-- HERO -->
+  <section class="hero">
+    <img src="TAGLOGO.jpg" alt="School Image" class="hero-bg" />
+    <div class="hero-overlay" aria-hidden="true"></div>
 
-        <div class="buttons-container">
-            
-            <a href="g8910.html" class="service-button">
-                <div class="icon">
-                    <img src="ENRL.png" alt="Enrollment Icon">
-                </div>
-                <span>Enrollment</span>
-            </a>
+    <div class="hero-content">
+      <div class="hero-card">
+        <div class="hero-badge">CNHS Enrollment</div>
+        <h1 class="hero-title">Be part of CNHS!</h1>
+        <p class="hero-lead">
+          Enroll easily, view guides, and access portal services in one place.
+        </p>
+      </div>
+    </div>
+  </section>
 
-              <a href="GF.html" class="service-button">
-                <div class="icon">
-                    <img src="guide.jpg" alt="Guide Icon">
-                </div>
-                <span>Guides & FAQs</span>
-            </a>
+  <!-- SERVICES (dito lang clickable) -->
+  <section class="services">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="services-title">Portal Services</h2>
+        <p class="services-subtitle">Choose what you need.</p>
+      </div>
 
-            <a href="admin.html" class="service-button">
-                <div class="icon">
-                    <img src="admin.png" alt="Admin Icon">
-                </div>
-                <span>User Admin</span>
-            </a>
+      <div class="service-grid">
+        <a href="g8910.html" class="service-card">
+          <div class="service-icon">
+            <img src="ENRL.png" alt="Enrollment Icon" />
+          </div>
+          <div class="service-body">
+            <div class="service-name">Enrollment</div>
+            <div class="service-desc">Apply / register students</div>
+          </div>
+          <span class="service-arrow" aria-hidden="true">›</span>
+        </a>
 
-        </div>
-    </section>
+        <a href="GF.html" class="service-card">
+          <div class="service-icon">
+            <img src="guide.png" alt="Guide Icon" />
+          </div>
+          <div class="service-body">
+            <div class="service-name">Guides & FAQs</div>
+            <div class="service-desc">Steps and help center</div>
+          </div>
+          <span class="service-arrow" aria-hidden="true">›</span>
+        </a>
+
+        <a href="admin.html" class="service-card">
+          <div class="service-icon">
+            <img src="admin.png" alt="Admin Icon" />
+          </div>
+          <div class="service-body">
+            <div class="service-name">User Admin</div>
+            <div class="service-desc">Manage records & access</div>
+          </div>
+          <span class="service-arrow" aria-hidden="true">›</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>© Carmen National High School</span>
+      <span class="dot">•</span>
+      <span>Portal Enrollment System</span>
+    </div>
+  </footer>
 
 </body>
 </html>

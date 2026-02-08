@@ -1,65 +1,46 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CARMEN NHS - Admin Login</title>
-  <link rel="stylesheet" href="admeans.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="./admeans.css" />
 </head>
 <body>
-  <div class="page">
-    <div class="card">
-      <div class="card-header">
-        <img class="logo" src="CRNHS.png" alt="CARMEN NHS Logo" />
-        <h1>CARMEN NHS</h1>
+  <div class="bg"></div>
+
+  <main class="wrap">
+    <section class="card">
+      <div class="brand">
+        <div class="logo">CNHS</div>
+        <div>
+          <h1>Admin Access</h1>
+          <p>Sign in with Google to open the dashboard.</p>
+        </div>
       </div>
 
-      <form id="loginForm" class="form" autocomplete="off" novalidate>
-        <!-- Username -->
-        <label class="label" for="username">EMAIL:</label>
-        <div class="input-wrap">
-          <div class="icon">
-            <img src="username.png" alt="username icon" />
-          </div>
-          <input
-            id="username"
-            name="username"
-            type="text"
-            placeholder="enter your username"
-            required
-          />
+      <label class="label" for="adminEmail">Admin email</label>
+      <input id="adminEmail" class="input" type="email" placeholder="you@gmail.com" autocomplete="email" />
+
+      <button id="googleBtn" class="btn">
+        <span class="btnIcon">G</span>
+        Continue with Google
+      </button>
+
+      <div class="meta">
+        <span class="hint">Admin-only. Public enrollment is separate.</span>
+        <div class="meta-actions">
+          <button id="backBtn" class="link" type="button">← Back</button>
+          <button id="clearBtn" class="link" type="button">Clear</button>
         </div>
-        <div id="userError" class="error"></div>
+      </div>
 
-        <!-- Password -->
-        <div class="row-between">
-          <label class="label" for="password">PASSWORD:</label>
-          <button type="button" id="togglePass" class="toggle">show</button>
-        </div>
+      <p id="status" class="status" aria-live="polite"></p>
+    </section>
 
-        <div class="input-wrap">
-          <div class="icon">
-            <img src="password.png" alt="password icon" />
-          </div>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="enter your password"
-            required
-          />
-        </div>
-        <div id="passError" class="error"></div>
+    <footer class="foot">© CNHS Inventory</footer>
+  </main>
 
-        <!-- Login Button -->
-        <button type="submit" id="loginBtn" class="login-btn">LOGIN</button>
-      </form>
-    </div>
-
-    <!-- Optional character sa kanan (kung gusto mo lagyan later) -->
-    <!-- <img class="character" src="character.png" alt="character" /> -->
-  </div>
-
-  <script type="module" src="Admin.js"></script>
+  <script type="module" src="./admin.js"></script>
 </body>
 </html>

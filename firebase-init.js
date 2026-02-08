@@ -1,7 +1,9 @@
 // firebase-init.js
+console.log("firebase-init loaded ✅", location.href);
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app-check.js";
 
 // ✅ ADDED: anon sign-in import
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js"; // ✅ ADDED
@@ -17,6 +19,11 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
+initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider("6Le8NWMsAAAAAAe7WPbAlQ9L-ULcTZwRu8jtW5Vq"),
+  isTokenAutoRefreshEnabled: true
+});
+console.log("App Check initialized ✅");
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 

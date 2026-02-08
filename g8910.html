@@ -3,88 +3,118 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Online Enrollment - SP-ICT</title>
-  <link rel="stylesheet" href="8910.css"/>
+  <title>CNHS Enrollment • JHS</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="enroll-modern.css"/>
 </head>
+
 <body>
-  <div class="page">
-    <div class="header">
-      <h1>ONLINE ENROLLMENT FOR GRADE 8, 9 &amp; 10:</h1>
-    </div>
-
-    <div class="content">
-      <!-- LEFT PANEL -->
-      <div class="panel left">
-        <div class="file-actions">
-          <label class="btn primary">
-            CHOOSE FILE
-            <input id="fileInput" type="file" accept="image/*" hidden />
-          </label>
-          <button id="uploadBtn" class="btn green" type="button">UPLOAD</button>
-          <button class="btn green" type="button" onclick="window.location.href='SHS.html'">SHS</button>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <img src="MINI.png" alt="CNHS Logo">
+        <div>
+          <h1>Online Enrollment • JHS</h1>
+          <p>Grades 8, 9 & 10</p>
         </div>
-
-        <div class="preview">
-          <div class="preview-title">PREVIEW</div>
-          <div class="preview-box">
-            <img id="previewImg" alt="Preview" />
-            <div id="previewPlaceholder" class="preview-placeholder">
-              No image selected
-            </div>
-          </div>
-        </div>
-
-        <div class="log-box" id="logBox" aria-live="polite"></div>
       </div>
 
-      <!-- RIGHT PANEL -->
-      <div class="panel right">
+      <div class="pills">
+        <a class="pill" href="index.html">Home</a>
+        <a class="pill" href="SHS.html">Go to SHS</a>
+      </div>
+    </div>
 
-        <!-- ✅ ADDED FORM WRAPPER -->
-        <form id="enrollmentForm">
-          <div class="form-grid">
-            <div class="row">
-              <div class="label">NAME:</div>
-              <input id="name" class="input" placeholder="e.g Salazar, Johannes X." />
-            </div>
+    <div class="grid">
+      <!-- LEFT: Upload / Preview -->
+      <div class="card sticky">
+        <div class="cardHead">
+          <div>
+            <p class="title">Scan / Upload Form</p>
+            <p class="hint">Choose image → Upload to auto-fill fields</p>
+          </div>
+        </div>
 
-            <div class="row">
-              <div class="label">SEX:</div>
-              <input id="sex" class="input" placeholder="e.g. MALE" />
-            </div>
+        <div class="cardBody">
+          <div class="actionRow">
+            <label class="btn primary">
+              Choose File
+              <input id="fileInput" type="file" accept="image/*" hidden />
+            </label>
 
-            <div class="row">
-              <div class="label">AGE:</div>
-              <input id="age" class="input" placeholder="e.g. 17" />
-            </div>
-
-            <div class="row">
-              <div class="label">GRADE:</div>
-              <!-- ✅ Change placeholder to number -->
-              <input id="grade" class="input" placeholder="e.g. 8" />
-            </div>
-
-            <div class="row">
-              <div class="label">SECTION:</div>
-              <input id="section" class="input" placeholder="e.g. AZURE" />
-            </div>
-
-            <div class="row">
-              <div class="label">LRN:</div>
-              <input id="lrn" class="input" placeholder="e.g 888888888888" maxlength="12" />
-            </div>
+            <button id="uploadBtn" class="btn" type="button">Upload & Auto-fill</button>
           </div>
 
-          <hr class="divider"/>
+          <div class="preview">
+            <div class="previewTop">
+              <span>Preview</span>
+              <span style="color:rgba(107,68,82,.8); font-weight:800; font-size:12px;">OCR Log below</span>
+            </div>
 
-          <div class="you-are">
-            <div class="you-are-left">
-              <div class="you-are-label">YOU ARE:</div>
+            <div class="previewBox">
+              <img id="previewImg" alt="Preview" />
+              <div id="previewPlaceholder" class="placeholder">No image selected</div>
+            </div>
 
-              <div class="dropdown">
-                <button id="dropdownToggle" class="dropdown-toggle" type="button" aria-expanded="false">
-                  <span class="arrow"></span>
-                </button>
+            <div class="log" id="logBox" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Form -->
+      <div class="card">
+        <div class="cardHead">
+          <div>
+            <p class="title">Student Details</p>
+            <p class="hint">Check the info before submitting</p>
+          </div>
+        </div>
+
+        <div class="cardBody">
+          <form id="enrollmentForm">
+            <div class="formGrid">
+              <div class="field">
+                <div class="label">NAME</div>
+                <input id="name" class="input" placeholder="e.g. Salazar, Johannes X." />
+              </div>
+
+              <div class="field">
+                <div class="label">SEX</div>
+                <input id="sex" class="input" placeholder="e.g. MALE" />
+              </div>
+
+              <div class="field">
+                <div class="label">AGE</div>
+                <input id="age" class="input" placeholder="e.g. 17" />
+              </div>
+
+              <div class="field">
+                <div class="label">GRADE</div>
+                <input id="grade" class="input" placeholder="e.g. 8" />
+              </div>
+
+              <div class="field">
+                <div class="label">SECTION</div>
+                <input id="section" class="input" placeholder="e.g. AZURE" />
+              </div>
+
+              <div class="field">
+                <div class="label">LRN</div>
+                <input id="lrn" class="input" placeholder="e.g. 888888888888" maxlength="12" />
+              </div>
+            </div>
+
+            <hr class="hr"/>
+
+            <div class="youRow">
+              <div class="label">YOU ARE</div>
+
+              <div class="dropWrap">
+                <button id="dropdownToggle" class="dropBtn" type="button" aria-expanded="false"></button>
 
                 <div id="dropdownMenu" class="dropdown-menu" role="menu">
                   <button class="dropdown-item" type="button">Incoming Grade 8 REGULAR</button>
@@ -94,31 +124,24 @@
                   <button class="dropdown-item" type="button">Incoming Grade 9 SP-ICT</button>
                   <button class="dropdown-item" type="button">Incoming Grade 10 SP-ICT</button>
                 </div>
+
+                <input id="youAreInput" class="input" placeholder="Select from dropdown..." />
               </div>
             </div>
 
-            <input id="youAreInput" class="input you-are-input" placeholder="e.g Incoming....." />
-          </div>
-
-          <div class="actions">
-            <button id="backBtn" class="btn red" type="button">BACK</button>
-
-            <!-- ✅ IMPORTANT: submit type -->
-            <button id="submitBtn" class="btn green big" type="submit">SUBMIT</button>
-          </div>
-        </form>
-        <!-- ✅ END FORM -->
-
+            <div class="actions">
+              <button id="backBtn" class="btn danger" type="button">Back</button>
+              <button id="submitBtn" class="btn submit" type="submit">Submit Enrollment</button>
+            </div>
+          </form>
+        </div>
       </div>
-
     </div>
+
+    <div class="footer">© Carmen National High School • Enrollment System</div>
   </div>
 
-  <!-- Tesseract.js for OCR (client-side) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script type="module" src="./8910.js"></script>
-
-  <!-- Firestore writer -->
-  <!-- <script type="module" src="test_write.js"></script> -->
+  <script type="module" src="./8910.js"></script>
 </body>
 </html>

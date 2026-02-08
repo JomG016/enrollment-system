@@ -32,6 +32,7 @@ const SHS_ROUTES = {
     "ABM": [{ grade: "Grade 12", section: "ABM" }],
     "TVL-ICT": [{ grade: "Grade 12", section: "TVL-ICT" }],
     "TVL-HE": [{ grade: "Grade 12", section: "TVL-HE" }],
+    "AFA": [{ grade: "Grade 12", section: "AFA" }],
   },
 };
 
@@ -76,7 +77,9 @@ async function handleSubmit(e) {
       name,
       sex,
       age,
-      lrn,
+      // Store both lowercase and uppercase keys for compatibility with dashboard
+      lrn: lrn || null,
+      LRN: lrn || null,
       inputGrade,
       grade: route.grade,
       section: route.section,
@@ -137,6 +140,32 @@ function setVal(id, val) {
   if (v) el.value = v;
 }
 
+// Validation helpers to avoid filling garbage
+function isValidLRN(s){
+  if(!s) return false;
+  const digits = String(s).replace(/[^0-9]/g,'');
+  return digits.length >= 10 && digits.length <= 12;
+}
+function isValidAge(s){
+  if(!s) return false;
+  const n = Number(String(s).match(/\d{1,2}/));
+  return Number.isInteger(n) && n >= 4 && n <= 100;
+}
+function isValidSex(s){
+  if(!s) return false;
+  return /^(MALE|FEMALE|M|F)$/i.test(String(s).trim());
+}
+function isValidName(s){
+  if(!s) return false;
+  const t = String(s).trim();
+  return /[A-Za-z]/.test(t) && t.split(/\s+/).length >= 2 && t.length >= 4;
+}
+function isValidSection(s){
+  if(!s) return false;
+  const t = String(s).trim();
+  return /^[A-Z0-9\-\s]{2,20}$/i.test(t);
+}
+
 function bestLRN(text) {
   const matches = text.match(/\b\d{10,12}\b/g) || [];
   if (matches.length === 0) return "";
@@ -160,34 +189,51 @@ function extractLineValue(lines, label) {
 }
 
 function parseOCRToFields(rawText) {
-  const t = String(rawText || "").toUpperCase().replace(/\r/g, "");
-  const lines = t.split("\n").map(x => x.trim()).filter(Boolean);
+  // Tolerant OCR parsing with label-first strategy and strong fallbacks
+  const raw = String(rawText || "").replace(/\r/g, "\n");
+  const cleaned = raw.replace(/[\u2018\u2019\u201C\u201D\u2013\u2014]/g, ' ').replace(/[^	\n\x20-\x7E]/g, ' ');
+  const lines = cleaned.split("\n").map(x => x.trim()).filter(Boolean);
   const joined = lines.join(" ");
+  const U = joined.toUpperCase();
 
-  let name = extractLineValue(lines, "NAME");
-  let sex = extractLineValue(lines, "SEX");
-  let age = extractLineValue(lines, "AGE");
-  let section = "";
+  const nameLabels = ['NAME','STUDENT NAME','FULL NAME'];
+  const sexLabels = ['SEX','GENDER'];
+  const ageLabels = ['AGE'];
+  const lrnLabels = ['LRN','LEARNER REFERENCE NUMBER'];
 
-  if (!name) {
-    const m = joined.match(/NAME[:\s]+(.+?)(?=\b(SEX|AGE|GRADE|SECTION|LRN)\b|$)/i);
-    if (m) name = cutAtKeywords(m[1]);
+  function labelExtract(labels){
+    for(const ln of lines){
+      for(const lbl of labels){
+        const re = new RegExp('^\\s*'+lbl+'\\s*[:\\-]?\\s*(.+)$','i');
+        const m = ln.match(re);
+        if(m) return cutAtKeywords(m[1]);
+      }
+    }
+    return "";
   }
 
+  let name = labelExtract(nameLabels);
+  let sex = labelExtract(sexLabels);
+  let age = labelExtract(ageLabels);
+  let section = "";
+  let lrn = labelExtract(lrnLabels);
+
   if (!sex) {
-    const m = joined.match(/\b(MALE|FEMALE)\b/i);
+    const m = U.match(/\b(MALE|FEMALE)\b/);
     if (m) sex = m[1];
   }
 
   if (!age) {
-    const m = joined.match(/AGE[:\s]+(\d{1,2})/i);
+    const m = U.match(/AGE[:\s]*(\d{1,2})/i);
     if (m) age = m[1];
   } else {
     const m = age.match(/\d{1,2}/);
     if (m) age = m[0];
   }
 
-  const sec1 = joined.match(/\b(HUMMS\s*A|HUMMS\s*B|ABM|TVL-ICT|TVL-HE|ICT|HE)\b/i);
+  // Section detection
+  const secRe = /\b(HUMMS\s*A|HUMMS\s*B|ABM|TVL-ICT|TVL-HE|ICT|HE|MAHARLIKA)\b/i;
+  const sec1 = joined.match(secRe);
   if (sec1) {
     const s = sec1[1].replace(/\s+/g, " ").toUpperCase();
     if (s === "ICT") section = "TVL-ICT";
@@ -195,12 +241,43 @@ function parseOCRToFields(rawText) {
     else section = s;
   }
 
-  let lrn = extractLineValue(lines, "LRN");
+  // LRN extraction: labelled or first 10-12 digit sequence
   if (!lrn) {
-    const m = joined.match(/LRN[:\s]+(\d{10,12})/i);
-    if (m) lrn = m[1];
+    const m = joined.match(/LRN[:\s]*([0-9\-\s]{10,16})/i);
+    if (m) lrn = (m[1] || '').replace(/[^0-9]/g,'');
     if (!lrn) lrn = bestLRN(joined);
   }
+
+  // Name fallback: choose first plausible line that isn't a label
+  if (!name) {
+    for(const ln of lines){
+      if (/\b(SEX|AGE|GRADE|SECTION|LRN|INCOMING|STUDENT|ID|SCHOOL)\b/i.test(ln)) continue;
+      const parts = ln.trim().split(/\s+/);
+      if (parts.length >= 2 && parts.length <= 6 && /[A-Za-z]/.test(ln)) { name = cutAtKeywords(ln); break; }
+    }
+  }
+
+  // Normalize name: strip labels/garbage, prefer comma-separated and title-case
+  function normalizeName(n){
+    if(!n) return "";
+    let s = String(n).trim();
+    s = s.replace(/\b(NAME|STUDENT|LRN|AGE|SEX|GRADE|SECTION)[:\s]*\b/ig,'').trim();
+    s = s.replace(/[^A-Za-z\,\.\s\-']/g,'');
+    if(/\d/.test(s)) s = s.replace(/\d+/g,'');
+    s = s.replace(/\s{2,}/g,' ');
+    if(/,/.test(s)){
+      return s.split(',').map(p => p.trim()).filter(Boolean).join(', ');
+    }
+    return s.split(/\s+/).map(w => w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ');
+  }
+
+  name = normalizeName(name);
+
+  if (name) name = name.trim();
+  if (sex) sex = sex.trim();
+  if (age) age = String(age).trim();
+  if (section) section = section.trim();
+  if (lrn) lrn = String(lrn).trim();
 
   return { name, sex, age, section, lrn };
 }
@@ -255,11 +332,21 @@ if (uploadBtn) {
       const text = result?.data?.text || "";
       const parsed = parseOCRToFields(text);
 
-      setVal("name", parsed.name);
-      setVal("sex", parsed.sex);
-      setVal("age", parsed.age);
-      setVal("section", parsed.section);
-      setVal("lrn", parsed.lrn);
+      // Apply stricter validation to avoid garbage autofill
+      if (isValidName(parsed.name)) { setVal("name", parsed.name); logLine("NAME autofilled"); }
+      else logLine("NAME not confident — skipped");
+
+      if (isValidSex(parsed.sex)) { setVal("sex", parsed.sex); logLine("SEX autofilled"); }
+      else logLine("SEX not confident — skipped");
+
+      if (isValidAge(parsed.age)) { setVal("age", parsed.age); logLine("AGE autofilled"); }
+      else logLine("AGE not confident — skipped");
+
+      if (isValidSection(parsed.section)) { setVal("section", parsed.section); logLine("SECTION autofilled"); }
+      else logLine("SECTION not confident — skipped");
+
+      if (isValidLRN(parsed.lrn)) { setVal("lrn", parsed.lrn); logLine("LRN autofilled"); }
+      else logLine("LRN not confident — skipped");
 
       logLine("✅ AUTOFILL DONE");
     } catch (err) {
@@ -326,6 +413,76 @@ if (uploadBtn) {
 const backBtn = document.getElementById("backBtn");
 if (backBtn) {
   backBtn.addEventListener("click", () => {
-    window.location.href = "main.html";
+    window.location.href = "index.html";
   });
 }
+
+
+// ======================
+// ADDED v3: DAILY STATS INCREMENT (NO STATIC IMPORTS)
+// Fix: avoids non-top-level import errors.
+// ======================
+function __cnhs_dateIdToday_v3(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+async function __cnhs_bumpDailyStat_v3(gradeLabel){
+  try{
+    const mod = await import("https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js");
+    const doc_v12 = mod.doc;
+    const setDoc_v12 = mod.setDoc;
+    const increment_v12 = mod.increment;
+    const serverTimestamp_v12 = mod.serverTimestamp;
+
+    const ref = doc_v12(db, "stats_daily", __cnhs_dateIdToday_v3());
+    await setDoc_v12(ref, {
+      [gradeLabel]: increment_v12(1),
+      updatedAt: serverTimestamp_v12()
+    }, { merge: true });
+  }catch(e){
+    console.warn("v3 stats_daily increment failed:", e);
+  }
+}
+
+
+
+// ======================
+// ADDED v3: AUTO-BUMP stats_daily when THIS PAGE creates an inventory doc
+// (works even if submit handler wasn't edited; no deletes, add-only)
+// ======================
+(async () => {
+  try{
+    const mod = await import("https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js");
+    const onSnapshot = mod.onSnapshot;
+    const collection = mod.collection;
+    const query = mod.query;
+    const orderBy = mod.orderBy;
+    const limit = mod.limit;
+
+    const key = "__cnhs_seen_inventory_ids_v3";
+    const seen = new Set(JSON.parse(sessionStorage.getItem(key) || "[]"));
+
+    // Listen to latest inventory docs (small window)
+    const qy = query(collection(db, "inventory"), orderBy("createdAt","desc"), limit(10));
+    onSnapshot(qy, async (snap) => {
+      for(const ch of snap.docChanges()){
+        if(ch.type !== "added") continue;
+        const id = ch.doc.id;
+        if(seen.has(id)) continue;
+
+        const data = ch.doc.data() || {};
+        const grade = String(data.grade || "").trim();
+        if(grade){
+          await __cnhs_bumpDailyStat_v3(grade);
+        }
+
+        seen.add(id);
+      }
+      sessionStorage.setItem(key, JSON.stringify([...seen].slice(-50)));
+    });
+  }catch(e){
+    console.warn("v3 inventory watcher failed:", e);
+  }
+})();
+
