@@ -129,7 +129,14 @@ function clearLog() {
 
 function logLine(msg) {
   if (!logBox) return;
+  // Append a new line and keep the log scrolled to the bottom.
+  // Use textContent to avoid injecting HTML.
   logBox.textContent += (logBox.textContent ? "\n" : "") + msg;
+  try {
+    logBox.scrollTop = logBox.scrollHeight;
+  } catch (e) {
+    // ignore if scrolling fails in some environments
+  }
 }
 
 function setVal(id, val) {
@@ -484,5 +491,27 @@ async function __cnhs_bumpDailyStat_v3(gradeLabel){
   }catch(e){
     console.warn("v3 inventory watcher failed:", e);
   }
+  // ✅ ADDED: show real firebase error on mobile
+function __cnhsExplainFirebaseError(err) {
+  const code = err?.code || "";
+  const msg = String(err?.message || err || "");
+
+  if (code.includes("permission-denied")) {
+    return "❌ PERMISSION DENIED.\nFirestore rules mo ang tumatanggi.\nKailangan signed-in (anon) o ayusin rules.";
+  }
+  if (code.includes("auth/unauthorized-domain")) {
+    return "❌ UNAUTHORIZED DOMAIN.\nKahit naka-add ka na, double check exact hostname (walang port).";
+  }
+  return "❌ FIREBASE ERROR:\n" + (code ? code + "\n" : "") + msg;
+}
+
+// ✅ ADDED: global catcher
+window.addEventListener("unhandledrejection", (e) => {
+  console.error("Unhandled promise rejection:", e?.reason);
+  alert(__cnhsExplainFirebaseError(e?.reason));
+});
+window.addEventListener("error", (e) => {
+  console.error("Window error:", e?.error || e?.message);
+});
 })();
 

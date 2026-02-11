@@ -661,5 +661,22 @@ async function __cnhs_bumpDailyStat_v3(gradeLabel){
   }catch(e){
     console.warn("v3 inventory watcher failed:", e);
   }
+  // ✅ ADDED: show real firebase error on mobile
+function __cnhsExplainFirebaseError(err) {
+  const code = err?.code || "";
+  const msg = String(err?.message || err || "");
+  if (code.includes("permission-denied")) {
+    return "❌ PERMISSION DENIED.\nFirestore rules ang problem.\nKailangan signed-in (anon) o ayusin rules.";
+  }
+  if (code.includes("auth/unauthorized-domain")) {
+    return "❌ UNAUTHORIZED DOMAIN.\nCheck exact hostname (walang port).";
+  }
+  return "❌ FIREBASE ERROR:\n" + (code ? code + "\n" : "") + msg;
+}
+
+window.addEventListener("unhandledrejection", (e) => {
+  console.error("Unhandled promise rejection:", e?.reason);
+  alert(__cnhsExplainFirebaseError(e?.reason));
+});
 })();
 

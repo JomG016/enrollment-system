@@ -476,3 +476,147 @@ img{ display:block; }
   flex-wrap: wrap;
 }
 .dot{ opacity: .55; }
+
+/* ===== CARBOT (Messenger-like small popup) ===== */
+.carbot-launch{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--pink-800), var(--pink-900));
+  color: #fff;
+  font-size: 22px;
+  box-shadow: var(--shadow-2);
+  z-index: 9998;
+}
+.carbot-launch:active{ transform: translateY(1px); }
+
+.carbot{
+  position: fixed;
+  right: 18px;
+  bottom: 82px;
+  width: 320px;          /* small messenger size */
+  height: 420px;
+  max-width: calc(100vw - 36px);
+  max-height: calc(100vh - 120px);
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(201,74,124,0.18);
+  border-radius: 16px;
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  box-shadow: var(--shadow-2);
+  z-index: 9998;
+  backdrop-filter: blur(10px);
+}
+.carbot.open{ display:flex; }
+
+.carbot-header{
+  padding: 10px 10px;
+  background: linear-gradient(135deg, var(--pink-700), var(--pink-900));
+  color: #fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.carbot-title{ display:flex; gap:10px; align-items:center; }
+.carbot-avatar{
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.22);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+}
+.carbot-name{ font-weight: 900; font-size: 13px; line-height: 1.1; }
+.carbot-sub{ font-size: 11px; opacity: .88; margin-top: 2px; }
+
+.carbot-actions button{
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  border-radius: 10px;
+  padding: 4px 8px;
+  cursor:pointer;
+  margin-left: 6px;
+}
+.carbot-actions button:hover{ background: rgba(255,255,255,0.22); }
+
+.carbot-messages{
+  padding: 12px;
+  flex: 1;
+  overflow: auto;
+  background: linear-gradient(180deg, rgba(248,227,236,0.75), rgba(255,249,244,0.9));
+}
+
+.carbot-row{ display:flex; margin: 10px 0; }
+.carbot-row.bot{ justify-content:flex-start; }
+.carbot-row.user{ justify-content:flex-end; }
+
+.carbot-bubble{
+  max-width: 78%;
+  padding: 9px 11px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.35;
+  border: 1px solid rgba(201,74,124,0.18);
+  white-space: pre-wrap;
+}
+.carbot-row.bot .carbot-bubble{
+  background: #fff;
+  border-top-left-radius: 6px;
+}
+.carbot-row.user .carbot-bubble{
+  background: rgba(201,74,124,0.12);
+  border-top-right-radius: 6px;
+}
+
+.carbot-choices{
+  padding: 10px;
+  display:flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid rgba(201,74,124,0.16);
+  background: rgba(255,255,255,0.92);
+}
+.carbot-chip{
+  border: 1px solid rgba(201,74,124,0.28);
+  background: #fff;
+  color: var(--pink-900);
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.carbot-chip:hover{
+  background: rgba(248,227,236,0.8);
+}
+
+@media (max-width: 420px){
+  .carbot{ width: calc(100vw - 36px); height: 60vh; }
+}
+.carbot-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carbot-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

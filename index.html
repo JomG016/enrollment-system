@@ -13,6 +13,33 @@
 </head>
 
 <body>
+  <!-- CARBOT (Bubble + Small Messenger UI) -->
+<button class="carbot-launch" id="carbotLaunch" aria-label="Open CARBOT chat">
+  💬
+</button>
+
+<div class="carbot" id="carbot" aria-live="polite">
+  <div class="carbot-header">
+    <div class="carbot-title">
+      <div class="carbot-avatar">
+  <img src="bot.png" alt="CARBOT" />
+</div>
+      <div>
+        <div class="carbot-name">CARBOT</div>
+        <div class="carbot-sub">Quick Help</div>
+      </div>
+    </div>
+    <div class="carbot-actions">
+      <button id="carbotReset" title="Reset">↻</button>
+      <button id="carbotClose" title="Close">✕</button>
+    </div>
+  </div>
+
+  <div class="carbot-messages" id="carbotMessages"></div>
+
+  <div class="carbot-choices" id="carbotChoices"></div>
+</div>
+
 
   <!-- OPENING ANIMATION / INTRO -->
   <!-- LIQUID MORPH iOS-STYLE INTRO -->
@@ -116,6 +143,6 @@
       <span>Portal Enrollment System</span>
     </div>
   </footer>
-
+<script src="indi.js"></script>
 </body>
 </html>

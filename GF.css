@@ -59,6 +59,14 @@ body{
   flex-wrap: wrap;
 }
 
+@media (max-width: 768px){
+  .topbar{
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px 8px;
+  }
+}
+
 .brand{
   display:flex;
   align-items:center;
@@ -85,6 +93,17 @@ body{
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 480px){
+  .pillnav{
+    gap: 4px;
+    padding: 6px;
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 .pill{
@@ -413,6 +432,12 @@ body{
   margin-top: -150px;
 }
 
+@media (max-width: 1000px){
+  .right-stack{
+    margin-top: 0;
+  }
+}
+
 /* contact */
 .contact-title{
   font-weight: 950;
@@ -514,6 +539,20 @@ body{
   .slider{ height: 250px; }
   .faq-q{ font-size: 14px; }
   .faqs-title{ height: 50px; }
+  .about-grid{
+    grid-template-columns: 1fr;
+  }
+  .right-stack{
+    margin-top: 0;
+    width: 100%;
+  }
+  .contact-row{
+    grid-template-columns: 36px 1fr;
+    gap: 10px;
+  }
+  .contact-txt{
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 480px){
@@ -524,4 +563,32 @@ body{
   .faq-btn{ width: 38px; height: 38px; top: 10px; }
   .faq-btn img{ width: 20px; height: 20px; }
   .scrollcontent{ max-height: 220px; }
+  .contact-title{
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .contact-row{
+    grid-template-columns: 36px 1fr;
+    gap: 8px;
+    margin: 8px 0;
+    padding: 6px;
+  }
+  .contact-txt{
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  .icon{
+    width: 32px;
+    height: 32px;
+  }
+  .powered-stack{
+    gap: 8px;
+  }
+  .powered-stack button{
+    padding: 8px;
+  }
+  .powered-stack img{
+    width: 28px;
+    height: 28px;
+  }
 }
