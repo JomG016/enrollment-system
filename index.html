@@ -108,5 +108,179 @@
       <span>Portal Enrollment System</span>
     </div>
   </footer>
+  <!-- Floating YouTube Help Video (desktop only) -->
+  <div id="ytWidget" class="ytw ytw--min" aria-label="Help Video" style="display:none;">
+    <div id="ytwHeader" class="ytw__header">
+      <span class="ytw__title">TUTORIAL: HOW TO OPERATE THE WEBSITE?</span>
+      <div class="ytw__actions">
+        <button id="ytwMin" class="ytw__btn" type="button" title="Minimize / Expand">—</button>
+        <button id="ytwClose" class="ytw__btn" type="button" title="Close">✕</button>
+      </div>
+    </div>
+    <div id="ytwBody" class="ytw__body">
+      <iframe
+        id="ytwFrame"
+        src="https://www.youtube.com/embed/0n-we66ZHqc?enablejsapi=1"
+        title="YouTube video"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </div>
+    <button id="ytwOpen" class="ytw__open" type="button">OPEN</button>
+</button>
+  </div>
+
+
+
+  <script>
+    (function () {
+      const w = document.getElementById("ytWidget");
+      const header = document.getElementById("ytwHeader");
+      const btnMin = document.getElementById("ytwMin");
+      const btnClose = document.getElementById("ytwClose");
+      const btnOpen = document.getElementById("ytwOpen");
+
+      // Restore position
+      try {
+        const saved = JSON.parse(localStorage.getItem("ytw_pos") || "null");
+        if (saved && typeof saved.left === "number" && typeof saved.top === "number") {
+          w.style.left = saved.left + "px";
+          w.style.top = saved.top + "px";
+          w.style.right = "auto";
+          w.style.bottom = "auto";
+        }
+      } catch (_) {}
+
+
+
+      // Minimize / expand (pause video when minimized)
+      btnMin.addEventListener("click", () => {
+        const wasMin = w.classList.contains("ytw--min");
+        w.classList.toggle("ytw--min");
+        // If now minimized, pause the video
+        if (!wasMin && w.classList.contains("ytw--min")) {
+          const ytFrame = document.getElementById("ytwFrame");
+          if (ytFrame && ytFrame.contentWindow) {
+            ytFrame.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+          }
+        }
+      });
+
+      // Close: minimize, hide close button, and pause video
+      btnClose.addEventListener("click", () => {
+        w.classList.add("ytw--min");
+        btnClose.style.display = "none";
+        // Pause the YouTube video
+        const ytFrame = document.getElementById("ytwFrame");
+        if (ytFrame && ytFrame.contentWindow) {
+          ytFrame.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+        }
+      });
+
+      // Open
+      btnOpen.addEventListener("click", () => {
+        w.classList.remove("ytw--closed");
+        w.classList.remove("ytw--min");
+        btnClose.style.display = "";
+      });
+
+      // Show video after loading animation
+      window.addEventListener("DOMContentLoaded", () => {
+        // Hide widget during loading
+       
+        // Wait for intro animation to finish (3.8s + 0.9s = 4.7s)
+        setTimeout(() => {
+          // Always show floating widget, but adjust position/size for mobile
+          w.style.display = "none";
+          w.classList.remove("ytw--closed");
+          w.classList.remove("ytw--min");
+          btnClose.style.display = "none";
+          // Mobile: bottom center, wider
+          if (window.innerWidth <= 700) {
+            w.style.left = "50%";
+            w.style.right = "auto";
+            w.style.bottom = "16px";
+            w.style.top = "auto";
+            w.style.transform = "translateX(-50%)";
+            w.style.width = "320px";
+            w.style.maxWidth = "96vw";
+          } else {
+            w.style.left = "";
+            w.style.right = "16px";
+            w.style.bottom = "16px";
+            w.style.top = "auto";
+            w.style.transform = "";
+            w.style.width = "360px";
+            w.style.maxWidth = "calc(100vw - 32px)";
+          }
+          setTimeout(() => { btnClose.style.display = ""; }, 2000);
+        }, 4700);
+      });
+
+
+      // Dragging (desktop + mobile)
+      let dragging = false;
+      let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+      function dragStart(e) {
+        if (e.target.closest(".ytw__btn")) return;
+        dragging = true;
+        const touch = e.touches ? e.touches[0] : e;
+        const rect = w.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+        startX = touch.clientX;
+        startY = touch.clientY;
+        w.style.left = startLeft + "px";
+        w.style.top = startTop + "px";
+        w.style.right = "auto";
+        w.style.bottom = "auto";
+        document.body.style.userSelect = "none";
+      }
+
+      function dragMove(e) {
+        if (!dragging) return;
+        const touch = e.touches ? e.touches[0] : e;
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        const rect = w.getBoundingClientRect();
+        const newLeft = Math.min(window.innerWidth - rect.width - 8, Math.max(8, startLeft + dx));
+        const newTop = Math.min(window.innerHeight - rect.height - 8, Math.max(8, startTop + dy));
+        w.style.left = newLeft + "px";
+        w.style.top = newTop + "px";
+      }
+
+      function dragEnd() {
+        if (!dragging) return;
+        dragging = false;
+        document.body.style.userSelect = "";
+        const rect = w.getBoundingClientRect();
+        try {
+          localStorage.setItem("ytw_pos", JSON.stringify({ left: rect.left, top: rect.top }));
+        } catch (_) {}
+      }
+
+      // Desktop
+      header.addEventListener("pointerdown", dragStart);
+      window.addEventListener("pointermove", dragMove);
+      window.addEventListener("pointerup", dragEnd);
+      // Mobile
+      header.addEventListener("touchstart", dragStart);
+      window.addEventListener("touchmove", dragMove);
+      window.addEventListener("touchend", dragEnd);
+
+      // Keep in bounds on resize
+      window.addEventListener("resize", () => {
+        if (w.classList.contains("ytw--closed")) return;
+        const rect = w.getBoundingClientRect();
+        const left = Math.min(window.innerWidth - rect.width - 8, Math.max(8, rect.left));
+        const top = Math.min(window.innerHeight - rect.height - 8, Math.max(8, rect.top));
+        w.style.left = left + "px";
+        w.style.top = top + "px";
+        w.style.right = "auto";
+        w.style.bottom = "auto";
+      });
+    })();
+  </script>
 </body>
 </html>

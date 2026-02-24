@@ -102,13 +102,81 @@ function isValidLRN(s) {
 function autoUppercaseInput(id) {
   const el = document.getElementById(id);
   if (!el) return;
+
   el.addEventListener("input", () => {
-    el.value = upper(el.value);
+
+    const start = el.selectionStart;   // remember cursor
+    const end = el.selectionEnd;
+
+    // UPPERCASE ONLY — DO NOT TRIM
+    el.value = (el.value || "").toUpperCase();
+
+    // restore cursor position (VERY IMPORTANT for mobile)
+    el.setSelectionRange(start, end);
   });
 }
-autoUppercaseInput("section");
 autoUppercaseInput("sex");
 autoUppercaseInput("name");
+
+
+// ==============================
+// GRADE -> SECTION choices (CURRENT grade)
+// (Fix: moved out of unhandledrejection so it runs normally)
+// ==============================
+const gradeEl = document.getElementById("grade");
+const sectionEl = document.getElementById("section");
+
+const SECTIONS_BY_GRADE = {
+  7: ["PYTHON","SAMPAGUITA","ORCHIDS","LAVENDER","JASMIN","DAISY"],
+  8: ["AZURE","VENUS","JUPITER","NEPTUNE","EARTH"],
+  9: ["AI","SILVER","COPPER","GOLD","NICKEL"],
+  11:["HUMMS A","HUMMS B","ABM","TVL-HE","TVL-ICT","AFA"]
+};
+
+function readGradeNumber(){
+  const raw = (gradeEl?.value || "").toString();
+  const m = raw.match(/\d+/);
+  return m ? Number(m[0]) : 0;
+}
+
+function fillSectionsForGrade(g){
+  if (!sectionEl) return;
+
+  // preserve current selection (if still valid)
+  const prev = sectionEl.value;
+
+  sectionEl.innerHTML = '<option value="">Select Section</option>';
+
+  const list = SECTIONS_BY_GRADE[g] || [];
+  for (const s of list) {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    sectionEl.appendChild(opt);
+  }
+
+  // IMPORTANT: wag i-disable para laging clickable (Option A)
+  sectionEl.disabled = false;
+
+  // restore selection if still exists, else clear
+  if (prev && list.includes(prev)) sectionEl.value = prev;
+  else sectionEl.value = "";
+}
+
+function refreshSections(){
+  fillSectionsForGrade(readGradeNumber());
+}
+
+gradeEl?.addEventListener("input", refreshSections);
+gradeEl?.addEventListener("change", refreshSections);
+
+// refresh when user opens dropdown
+sectionEl?.addEventListener("focus", refreshSections);
+sectionEl?.addEventListener("click", refreshSections);
+
+// initial run (this enables the dropdown after you type Grade)
+refreshSections();
+
 
 function parseIncomingGrade(text) {
   const m = norm(text).match(/Grade\s*(\d+)/i);
@@ -153,7 +221,7 @@ function inferIncomingGradeFromSection(section) {
   if (["PYTHON","SAMPAGUITA","JASMIN","ORCHIDS","DAISY","LAVENDER"].includes(s)) return 8;
 
   // Grade 8 sections -> Incoming Grade 9
-  if (["AZURE","EARTH","JUPITER","NEPTUNE"].includes(s)) return 9;
+  if (["AZURE","VENUS","EARTH","JUPITER","NEPTUNE"].includes(s)) return 9;
 
   // Grade 9 sections -> Incoming Grade 10
   if (["AI","SILVER","COPPER","GOLD","NICKEL"].includes(s)) return 10;
@@ -206,7 +274,7 @@ const ROUTES = {
     "EARTH": [{ grade: "Grade 9", section: "SILVER" }],
     "JUPITER": [{ grade: "Grade 9", section: "COPPER" }],
     "NEPTUNE": [{ grade: "Grade 9", section: "GOLD" }],
-    "DAISY": [{ grade: "Grade 9", section: "NICKEL" }],
+    "VENUS": [{ grade: "Grade 9", section: "NICKEL" }],
   },
   "Grade 9": {
     "AI": [{ grade: "Grade 10", section: "AI" }],
@@ -671,5 +739,5 @@ window.addEventListener("unhandledrejection", (e) => {
   console.error("Unhandled promise rejection:", e?.reason);
   alert(__cnhsExplainFirebaseError(e?.reason));
 });
-})();
 
+})();
