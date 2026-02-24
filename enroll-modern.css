@@ -85,12 +85,11 @@ body{
 .pill:hover{ transform: translateY(-1px); }
 
 .grid{
-  max-width: 900px;
-  margin: 48px auto 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 80vh;
+  max-width: 1180px;
+  margin: 0 auto;
+  display:grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
 }
 
 @media (min-width: 980px){
@@ -107,10 +106,7 @@ body{
   border-radius: var(--r24);
   box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
-  overflow: visible;
-  padding: 48px 56px;
-  max-width: 600px;
-  min-width: 380px;
+  overflow: visible; 
 }
 
 .cardHead{
