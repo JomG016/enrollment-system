@@ -127,7 +127,6 @@
         allowfullscreen></iframe>
     </div>
     <button id="ytwOpen" class="ytw__open" type="button">OPEN</button>
-</button>
   </div>
 
 
@@ -191,7 +190,7 @@
         // Wait for intro animation to finish (3.8s + 0.9s = 4.7s)
         setTimeout(() => {
           // Always show floating widget, but adjust position/size for mobile
-          w.style.display = "none";
+          w.style.display = "";
           w.classList.remove("ytw--closed");
           w.classList.remove("ytw--min");
           btnClose.style.display = "none";
