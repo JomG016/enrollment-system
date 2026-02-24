@@ -39,15 +39,12 @@ img{ display:block; }
   padding: 0 16px;
 }
 
-/* ===== INTRO ANIMATION ===== */
-/* ===== LIQUID MORPH iOS-STYLE INTRO ===== */
 .intro{
   position: fixed;
   inset: 0;
   z-index: 9999;
   overflow: hidden;
 
-  /* iOS-ish background */
   background:
     radial-gradient(900px 600px at 50% 10%, rgba(255,255,255,0.18), transparent 55%),
     linear-gradient(135deg, #d94f86, #8f1548);
@@ -56,12 +53,10 @@ img{ display:block; }
   align-items:center;
   justify-content:center;
 
-  /* exit: blur + fade + slight zoom */
   animation: introExit 900ms ease forwards;
-  animation-delay: 3.8s; /* total duration ng splash */
+  animation-delay: 3.8s; 
 }
 
-/* soft film grain (optional but nice) */
 .intro::after{
   content:"";
   position:absolute;
@@ -74,7 +69,6 @@ img{ display:block; }
   pointer-events:none;
 }
 
-/* liquid blobs container */
 .liquid-layer{
   position:absolute;
   inset:-30%;
@@ -82,29 +76,24 @@ img{ display:block; }
   opacity: 0.95;
 }
 
-/* blob base */
 .blob{
   position:absolute;
   width: 320px;
   height: 320px;
 
-  /* liquid look */
   background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.22), transparent 35%),
               linear-gradient(135deg, rgba(255,179,207,0.95), rgba(201,74,124,0.65));
   mix-blend-mode: screen;
 
-  /* morph magic */
   border-radius: 45% 55% 60% 40% / 55% 35% 65% 45%;
   animation: morph 6.2s ease-in-out infinite, drift 9s ease-in-out infinite;
 }
 
-/* individual placements */
 .b1{ top: 8%; left: 10%; transform: scale(1.15); animation-delay: 0s, 0s; }
 .b2{ top: 55%; left: 18%; width: 260px; height: 260px; animation-delay: 1.1s, 2.2s; opacity: .85; }
 .b3{ top: 18%; left: 68%; width: 360px; height: 360px; animation-delay: 2.0s, 1.2s; opacity: .75; }
 .b4{ top: 62%; left: 62%; width: 280px; height: 280px; animation-delay: 3.1s, 3.0s; opacity: .8; }
 
-/* morphing border-radius = liquid */
 @keyframes morph{
   0%{
     border-radius: 45% 55% 60% 40% / 55% 35% 65% 45%;
@@ -129,7 +118,6 @@ img{ display:block; }
   50%{ transform: translate(40px,-30px) scale(1.18); }
 }
 
-/* glass card (iOS glassmorphism) */
 .glass-splash{
   position: relative;
   z-index: 2;
@@ -151,7 +139,6 @@ img{ display:block; }
   animation-delay: 180ms;
 }
 
-/* subtle inner highlight */
 .glass-splash::before{
   content:"";
   position:absolute;
@@ -162,7 +149,6 @@ img{ display:block; }
   pointer-events:none;
 }
 
-/* iOS-ish logo float */
 .splash-logo{
   width: 88px;
   height: 88px;
@@ -207,7 +193,6 @@ img{ display:block; }
   to{ opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* creative dots (no “loading bar” vibe) */
 .splash-dots{
   display:flex;
   justify-content:center;
@@ -232,7 +217,6 @@ img{ display:block; }
   50% { transform: translateY(-5px); opacity: .85; }
 }
 
-/* exit: blur + fade + zoom (iOS style) */
 @keyframes introExit{
   to{
     opacity: 0;
@@ -243,7 +227,6 @@ img{ display:block; }
   }
 }
 
-/* Accessibility */
 @media (prefers-reduced-motion: reduce){
   .intro, .liquid-layer, .blob, .glass-splash, .splash-logo, .splash-title, .splash-sub, .splash-dots span{
     animation: none !important;
@@ -251,8 +234,6 @@ img{ display:block; }
   .intro{ display:none; }
 }
 
-
-/* ===== HEADER ===== */
 .topbar{
   position: sticky;
   top: 0;
@@ -303,7 +284,6 @@ img{ display:block; }
   font-weight: 600;
 }
 
-/* ===== HERO ===== */
 .hero{
   position: relative;
   height: clamp(320px, 48vh, 520px);
@@ -371,7 +351,6 @@ img{ display:block; }
   line-height: 1.6;
 }
 
-/* ===== SERVICES ===== */
 .services{
   padding: 44px 0 52px;
 }
@@ -393,7 +372,6 @@ img{ display:block; }
   font-size: clamp(12px, 2.1vw, 13px);
 }
 
-/* AUTO-RESPONSIVE GRID: adjusts itself */
 .service-grid{
   display:grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -455,14 +433,12 @@ img{ display:block; }
   line-height: 1;
 }
 
-/* focus ring */
 .service-card:focus{
   outline: none;
   box-shadow: 0 0 0 4px var(--ring);
   border-color: rgba(201,74,124,0.55);
 }
 
-/* FOOTER */
 .footer{
   padding: 18px 0 26px;
   color: rgba(111,75,87,0.85);

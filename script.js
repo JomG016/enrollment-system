@@ -4,27 +4,22 @@ import {
   collection as collection_v12,
   serverTimestamp as serverTimestamp_v12
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js"; 
 
-// ✅ ADDED: anon auth fallback
-import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js"; // ✅ ADDED
-
-async function ensureAnonAuth() { // ✅ ADDED
-  try { // ✅ ADDED
-    if (!auth?.currentUser) await signInAnonymously(auth); // ✅ ADDED
-  } catch (e) { // ✅ ADDED
-    console.error("Anon auth failed:", e); // ✅ ADDED
-    throw e; // ✅ ADDED
-  } // ✅ ADDED
-} // ✅ ADDED
+async function ensureAnonAuth() { 
+  try {
+    if (!auth?.currentUser) await signInAnonymously(auth); 
+  } catch (e) { 
+    console.error("Anon auth failed:", e); 
+    throw e; 
+  } 
+} 
 
 const form = document.getElementById("enrollmentForm") || document.querySelector("form");
 
 const norm = (s) => (s || "").toString().trim();
 const upper = (s) => norm(s).toUpperCase();
 
-// ===============================
-// ✅ SHS ROUTING (Grade 11 → Grade 12)
-// ===============================
 const SHS_ROUTES = {
   "Grade 11": {
     "HUMMS A": [{ grade: "Grade 12", section: "HUMMS A" }],
@@ -51,7 +46,6 @@ function routeSHS(inputGrade, inputSection) {
   return options.length === 1 ? options[0] : pickRandom(options);
 }
 
-// ✅ FIXED: correct handler name (was Submit / handleSubmit mismatch)
 async function handleSubmit(e) {
   if (e?.preventDefault) e.preventDefault();
 
@@ -77,16 +71,15 @@ async function handleSubmit(e) {
       name,
       sex,
       age,
-      // Store both lowercase and uppercase keys for compatibility with dashboard
       lrn: lrn || null,
       LRN: lrn || null,
       inputGrade,
       grade: route.grade,
       section: route.section,
-      createdAt: serverTimestamp_v12() // ✅ serverTimestamp MUST stay
+      createdAt: serverTimestamp_v12()
     });
 
-    alert("✅ SHS Enrollment saved");
+    alert("SHS Enrollment saved");
 
     if (form && form.reset) form.reset();
     else {
@@ -98,25 +91,19 @@ async function handleSubmit(e) {
 
   } catch (err) {
     console.error(err);
-    alert("❌ FIREBASE ERROR. Check console.");
+    alert("❌ FIREBASE ERROR.");
   }
 }
 
-// Attach submit handler if a form exists
 if (form) {
   form.addEventListener("submit", handleSubmit);
 }
 
-// SHS.html has submitBtn type=button, so bind click
 const submitBtn = document.getElementById("submitBtn");
 if (submitBtn) {
   submitBtn.addEventListener("click", handleSubmit);
 }
 
-
-// =====================================================
-// ✅ UPLOAD PREVIEW + OCR AUTOFILL (UNCHANGED)
-// =====================================================
 const fileInput = document.getElementById("fileInput");
 const uploadBtn = document.getElementById("uploadBtn");
 const previewImg = document.getElementById("previewImg");
@@ -129,13 +116,11 @@ function clearLog() {
 
 function logLine(msg) {
   if (!logBox) return;
-  // Append a new line and keep the log scrolled to the bottom.
-  // Use textContent to avoid injecting HTML.
+
   logBox.textContent += (logBox.textContent ? "\n" : "") + msg;
   try {
     logBox.scrollTop = logBox.scrollHeight;
   } catch (e) {
-    // ignore if scrolling fails in some environments
   }
 }
 
@@ -147,7 +132,6 @@ function setVal(id, val) {
   if (v) el.value = v;
 }
 
-// Validation helpers to avoid filling garbage
 function isValidLRN(s){
   if(!s) return false;
   const digits = String(s).replace(/[^0-9]/g,'');
@@ -196,7 +180,6 @@ function extractLineValue(lines, label) {
 }
 
 function parseOCRToFields(rawText) {
-  // Tolerant OCR parsing with label-first strategy and strong fallbacks
   const raw = String(rawText || "").replace(/\r/g, "\n");
   const cleaned = raw.replace(/[\u2018\u2019\u201C\u201D\u2013\u2014]/g, ' ').replace(/[^	\n\x20-\x7E]/g, ' ');
   const lines = cleaned.split("\n").map(x => x.trim()).filter(Boolean);
@@ -238,7 +221,6 @@ function parseOCRToFields(rawText) {
     if (m) age = m[0];
   }
 
-  // Section detection
   const secRe = /\b(HUMMS\s*A|HUMMS\s*B|ABM|TVL-ICT|TVL-HE|ICT|HE|MAHARLIKA)\b/i;
   const sec1 = joined.match(secRe);
   if (sec1) {
@@ -248,14 +230,12 @@ function parseOCRToFields(rawText) {
     else section = s;
   }
 
-  // LRN extraction: labelled or first 10-12 digit sequence
   if (!lrn) {
     const m = joined.match(/LRN[:\s]*([0-9\-\s]{10,16})/i);
     if (m) lrn = (m[1] || '').replace(/[^0-9]/g,'');
     if (!lrn) lrn = bestLRN(joined);
   }
 
-  // Name fallback: choose first plausible line that isn't a label
   if (!name) {
     for(const ln of lines){
       if (/\b(SEX|AGE|GRADE|SECTION|LRN|INCOMING|STUDENT|ID|SCHOOL)\b/i.test(ln)) continue;
@@ -264,7 +244,6 @@ function parseOCRToFields(rawText) {
     }
   }
 
-  // Normalize name: strip labels/garbage, prefer comma-separated and title-case
   function normalizeName(n){
     if(!n) return "";
     let s = String(n).trim();
@@ -289,7 +268,7 @@ function parseOCRToFields(rawText) {
   return { name, sex, age, section, lrn };
 }
 
-// Preview on choose
+// Preview 
 if (fileInput) {
   fileInput.addEventListener("change", () => {
     const file = fileInput.files?.[0];
@@ -306,7 +285,7 @@ if (fileInput) {
   });
 }
 
-// OCR on upload click
+// upload button
 if (uploadBtn) {
   uploadBtn.addEventListener("click", async () => {
     const file = fileInput?.files?.[0];
@@ -339,7 +318,6 @@ if (uploadBtn) {
       const text = result?.data?.text || "";
       const parsed = parseOCRToFields(text);
 
-      // Apply stricter validation to avoid garbage autofill
       if (isValidName(parsed.name)) { setVal("name", parsed.name); logLine("NAME autofilled"); }
       else logLine("NAME not confident — skipped");
 
@@ -355,19 +333,15 @@ if (uploadBtn) {
       if (isValidLRN(parsed.lrn)) { setVal("lrn", parsed.lrn); logLine("LRN autofilled"); }
       else logLine("LRN not confident — skipped");
 
-      logLine("✅ AUTOFILL DONE");
+      logLine("AUTOFILL DONE");
     } catch (err) {
       console.error(err);
-      logLine("❌ OCR failed. Check console.");
+      logLine("OCR failed.");
       alert("OCR failed. Try clearer image.");
     }
   });
 }
 
-
-// ================================
-// ✅ DROPDOWN TOGGLE (UNCHANGED)
-// ================================
 (() => {
   const toggleBtn = document.getElementById("dropdownToggle");
   const menu = document.getElementById("dropdownMenu");
@@ -424,11 +398,6 @@ if (backBtn) {
   });
 }
 
-
-// ======================
-// ADDED v3: DAILY STATS INCREMENT (NO STATIC IMPORTS)
-// Fix: avoids non-top-level import errors.
-// ======================
 function __cnhs_dateIdToday_v3(){
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -452,12 +421,6 @@ async function __cnhs_bumpDailyStat_v3(gradeLabel){
   }
 }
 
-
-
-// ======================
-// ADDED v3: AUTO-BUMP stats_daily when THIS PAGE creates an inventory doc
-// (works even if submit handler wasn't edited; no deletes, add-only)
-// ======================
 (async () => {
   try{
     const mod = await import("https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js");
@@ -470,7 +433,6 @@ async function __cnhs_bumpDailyStat_v3(gradeLabel){
     const key = "__cnhs_seen_inventory_ids_v3";
     const seen = new Set(JSON.parse(sessionStorage.getItem(key) || "[]"));
 
-    // Listen to latest inventory docs (small window)
     const qy = query(collection(db, "inventory"), orderBy("createdAt","desc"), limit(10));
     onSnapshot(qy, async (snap) => {
       for(const ch of snap.docChanges()){
@@ -491,21 +453,20 @@ async function __cnhs_bumpDailyStat_v3(gradeLabel){
   }catch(e){
     console.warn("v3 inventory watcher failed:", e);
   }
-  // ✅ ADDED: show real firebase error on mobile
+
 function __cnhsExplainFirebaseError(err) {
   const code = err?.code || "";
   const msg = String(err?.message || err || "");
 
   if (code.includes("permission-denied")) {
-    return "❌ PERMISSION DENIED.\nFirestore rules mo ang tumatanggi.\nKailangan signed-in (anon) o ayusin rules.";
+    return "PERMISSION DENIED.\nFirestore rules mo ang tumatanggi.\nKailangan signed-in (anon) o ayusin rules.";
   }
   if (code.includes("auth/unauthorized-domain")) {
-    return "❌ UNAUTHORIZED DOMAIN.\nKahit naka-add ka na, double check exact hostname (walang port).";
+    return "UNAUTHORIZED DOMAIN.\nKahit naka-add ka na, double check exact hostname (walang port).";
   }
-  return "❌ FIREBASE ERROR:\n" + (code ? code + "\n" : "") + msg;
+  return "FIREBASE ERROR:\n" + (code ? code + "\n" : "") + msg;
 }
 
-// ✅ ADDED: global catcher
 window.addEventListener("unhandledrejection", (e) => {
   console.error("Unhandled promise rejection:", e?.reason);
   alert(__cnhsExplainFirebaseError(e?.reason));

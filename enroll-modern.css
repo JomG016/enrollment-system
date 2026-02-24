@@ -36,7 +36,6 @@ body{
   overflow-x:hidden;
 }
 
-/* ====== page shell ====== */
 .wrap{
   min-height:100%;
   padding: 18px 14px 26px;
@@ -71,7 +70,6 @@ body{
   font-weight: 600;
 }
 
-/* small pill links (minimal buttons) */
 .pills{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
 .pill{
   text-decoration:none;
@@ -86,16 +84,15 @@ body{
 }
 .pill:hover{ transform: translateY(-1px); }
 
-/* ====== main layout (auto responsive) ====== */
 .grid{
-  max-width: 1180px;
-  margin: 0 auto;
-  display:grid;
-  gap: 14px;
-  grid-template-columns: 1fr;
+  max-width: 900px;
+  margin: 48px auto 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
 }
 
-/* desktop: 2 columns */
 @media (min-width: 980px){
   .grid{
     grid-template-columns: 0.95fr 1.05fr;
@@ -104,14 +101,16 @@ body{
   }
 }
 
-/* ====== glass cards ====== */
 .card{
   background: var(--card);
   border: 1px solid var(--stroke);
   border-radius: var(--r24);
   box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
-  overflow: visible; /* ✅ FIX: allow dropdown to go outside */
+  overflow: visible;
+  padding: 48px 56px;
+  max-width: 600px;
+  min-width: 380px;
 }
 
 .cardHead{
@@ -139,7 +138,6 @@ body{
 
 .cardBody{ padding: 14px 16px 16px; }
 
-/* ====== upload/preview panel ====== */
 .actionRow{
   display:flex;
   gap: 10px;
@@ -227,15 +225,14 @@ body{
   background: rgba(255,255,255,0.60);
   padding: 12px;
   min-height: 92px;
-  max-height: 220px; /* cap to avoid stretching the whole page */
-  overflow: auto;    /* internal scrolling for long logs */
+  max-height: 220px;
+  overflow: auto;   
   font-size: 12px;
   color: rgba(36,19,24,0.78);
   white-space: pre-wrap;
   line-height: 1.45;
 }
 
-/* make left column sticky on desktop */
 @media (min-width: 980px){
   .sticky{
     position: sticky;
@@ -243,7 +240,6 @@ body{
   }
 }
 
-/* ====== form ====== */
 .formGrid{
   display:grid;
   grid-template-columns: 1fr;
@@ -286,7 +282,6 @@ body{
   box-shadow: 0 0 0 4px var(--ring);
 }
 
-/* full width fields */
 .span2{ grid-column: 1 / -1; }
 
 .hr{
@@ -296,7 +291,7 @@ body{
   background: rgba(201,74,124,0.18);
 }
 
-/* YOU ARE dropdown row */
+/* dropdown */
 .youRow{
   display:grid;
   grid-template-columns: auto 1fr;
@@ -345,9 +340,9 @@ body{
   box-shadow: var(--shadow);
 
   display:none;
-  z-index: 999999;           /* ✅ stronger */
-  max-height: 240px;         /* ✅ if many items */
-  overflow: auto;            /* ✅ scrollable */
+  z-index: 999999;          
+  max-height: 240px;         
+  overflow: auto;            
   -webkit-overflow-scrolling: touch;
 }
 
@@ -397,7 +392,6 @@ body{
   font-weight: 600;
 }
 
-/* reduced motion */
 @media (prefers-reduced-motion: reduce){
   *{ scroll-behavior:auto !important; }
 }

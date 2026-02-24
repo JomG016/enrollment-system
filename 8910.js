@@ -10,15 +10,56 @@ import { db, auth, authReady } from "./firebase-init.js";
 // ✅ ADDED: missing import for ensureAnonAuth()
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js"; // ✅ ADDED
 
+
 // ================================
-// ✅ SUPPRESS ONLY test_write.js ALERT
-// (Fix "FIREBASE WRITE FAILED" popup after success)
+// SMOOTH CUSTOM POPUP FOR WARNINGS/ERRORS
 // ================================
+function showSmoothPopup(message, type = "warning") {
+  let popup = document.getElementById("smoothPopup");
+  if (!popup) {
+    popup = document.createElement("div");
+    popup.id = "smoothPopup";
+    popup.style.position = "fixed";
+    popup.style.top = "50%";
+    popup.style.left = "50%";
+    popup.style.transform = "translate(-50%, -50%) scale(0.95)";
+    popup.style.minWidth = "280px";
+    popup.style.maxWidth = "90vw";
+    popup.style.background = type === "error" ? "#ffdddd" : "#fffbe6";
+    popup.style.color = type === "error" ? "#b00020" : "#856404";
+    popup.style.border = type === "error" ? "2px solid #b00020" : "2px solid #ffe58f";
+    popup.style.borderRadius = "16px";
+    popup.style.boxShadow = "0 8px 32px rgba(0,0,0,0.18)";
+    popup.style.padding = "24px 32px";
+    popup.style.fontSize = "1.1rem";
+    popup.style.fontWeight = "bold";
+    popup.style.textAlign = "center";
+    popup.style.zIndex = "999999";
+    popup.style.opacity = "0";
+    popup.style.transition = "opacity 0.3s, transform 0.3s";
+    document.body.appendChild(popup);
+  }
+  popup.innerText = message;
+  popup.style.display = "block";
+  popup.style.opacity = "0";
+  popup.style.transform = "translate(-50%, -50%) scale(0.95)";
+  setTimeout(() => {
+    popup.style.opacity = "1";
+    popup.style.transform = "translate(-50%, -50%) scale(1)";
+  }, 10);
+  setTimeout(() => {
+    popup.style.opacity = "0";
+    popup.style.transform = "translate(-50%, -50%) scale(0.95)";
+    setTimeout(() => { popup.style.display = "none"; }, 350);
+  }, 2200);
+}
+
+// Override window.alert to use smooth popup (except for test_write.js FIREBASE WRITE FAILED)
 (() => {
-  const _alert = window.alert;
+  window._alert = window.alert;
   window.alert = (msg) => {
     if (typeof msg === "string" && msg.includes("FIREBASE WRITE FAILED")) return;
-    return _alert(msg);
+    showSmoothPopup(msg, (typeof msg === "string" && msg.includes("ERROR")) ? "error" : "warning");
   };
 })();
 
@@ -27,8 +68,47 @@ const form = document.getElementById("enrollmentForm");
 const youAreInput = document.getElementById("youAreInput");
 
 // --- helpers ---
+
+// Normalize and uppercase helpers
 const norm = (s) => (s || "").toString().trim();
 const upper = (s) => norm(s).toUpperCase();
+
+// Enforce name format: SURNAME, NAME MIDDLE NAME (no initials)
+function formatFullName(raw) {
+  let s = String(raw || "").replace(/\s+/g, " ").trim();
+  // Remove extra commas, keep only one
+  s = s.replace(/,+/g, ",");
+  // Split by comma
+  let parts = s.split(",");
+  if (parts.length < 2) return ""; // Must have comma
+  let surname = parts[0].trim();
+  let rest = parts.slice(1).join(",").trim();
+  // Remove initials (single letters with/without dot)
+  rest = rest.replace(/\b([A-Z])\.?\b/g, "").replace(/\s+/g, " ").trim();
+  // Require at least 2 words in rest (name + middle name)
+  if (rest.split(" ").length < 2) return "";
+  // All caps
+  return `${upper(surname)}, ${upper(rest)}`;
+}
+
+// Strict LRN: must be exactly 12 digits
+function isValidLRN(s) {
+  if (!s) return false;
+  const digits = String(s).replace(/[^0-9]/g, "");
+  return digits.length === 12;
+}
+
+// Auto-uppercase for section, name, sex
+function autoUppercaseInput(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener("input", () => {
+    el.value = upper(el.value);
+  });
+}
+autoUppercaseInput("section");
+autoUppercaseInput("sex");
+autoUppercaseInput("name");
 
 function parseIncomingGrade(text) {
   const m = norm(text).match(/Grade\s*(\d+)/i);
@@ -106,7 +186,8 @@ function pickRandom(arr) {
   return arr[Math.random() * arr.length | 0];
 }
 
-// ROUTING RULES (UNCHANGED)
+
+// ROUTING RULES (JHS + SHS)
 const ROUTES = {
   "Grade 7": {
     "PYTHON": [{ grade: "Grade 8", section: "PYTHON" }],
@@ -134,6 +215,14 @@ const ROUTES = {
     "GOLD": [{ grade: "Grade 10", section: "DEL-PILAR" }],
     "NICKEL": [{ grade: "Grade 10", section: "BONIFACIO" }],
   },
+  "Grade 11": {
+    "HUMMS A": [{ grade: "Grade 12", section: "HUMMS A" }],
+    "HUMMS B": [{ grade: "Grade 12", section: "HUMMS B" }],
+    "ABM": [{ grade: "Grade 12", section: "ABM" }],
+    "TVL-ICT": [{ grade: "Grade 12", section: "TVL-ICT" }],
+    "TVL-HE": [{ grade: "Grade 12", section: "TVL-HE" }],
+    "AFA": [{ grade: "Grade 12", section: "AFA" }],
+  },
 };
 
 function routeStudent(inputGrade, inputSection) {
@@ -142,6 +231,188 @@ function routeStudent(inputGrade, inputSection) {
   if (!options || options.length === 0) return null;
   return options.length === 1 ? options[0] : pickRandom(options);
 }
+
+// Unified submit handler for both JHS and SHS
+let doubleCheckPassed = false;
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  e.stopPropagation();
+
+  try {
+    if (typeof authReady !== "undefined") await authReady;
+    await ensureAnonAuth();
+
+
+    // Get all required fields
+    let lrn = norm(document.getElementById("lrn").value);
+    let nameRaw = document.getElementById("name").value;
+    let section = upper(document.getElementById("section").value);
+    let sex = upper(document.getElementById("sex").value);
+    let age = norm(document.getElementById("age").value);
+    const youAreVal = youAreInput?.value || "";
+
+    // If all fields are empty, show FILL THE FORMS
+    if (!lrn && !nameRaw && !section && !sex && !age && !youAreVal) {
+      showSmoothPopup("FILL THE FORMS", "warning");
+      doubleCheckPassed = false;
+      return;
+    }
+
+    // Validate LRN
+    lrn = lrn.replace(/[^0-9]/g, "");
+    if (!isValidLRN(lrn)) {
+      alert("LRN must be exactly 12 digits and is required.");
+      doubleCheckPassed = false;
+      return;
+    }
+
+    // Validate name
+    let name = formatFullName(nameRaw);
+    if (!name) {
+      alert("Name must be in the format: SURNAME, NAME MIDDLE NAME (no initials, full names only)");
+      doubleCheckPassed = false;
+      return;
+    }
+
+    // Detect if SHS (Grade 12) or JHS
+    let incomingGrade = parseIncomingGradeSmart(youAreVal) || inferIncomingGradeFromSection(section);
+    let inputGrade = incomingGrade ? `Grade ${incomingGrade - 1}` : "";
+    let track = "JHS";
+    let route = null;
+
+    // If SHS (Grade 12) or Grade 11
+    if (!incomingGrade && section && ["HUMMS A","HUMMS B","ABM","TVL-ICT","TVL-HE","AFA"].includes(section)) {
+      inputGrade = "Grade 11";
+      incomingGrade = 12;
+      track = "SHS";
+      route = routeStudent(inputGrade, section);
+    } else if (incomingGrade && incomingGrade >= 11) {
+      // If autofilled as incoming 12, treat as SHS
+      inputGrade = "Grade 11";
+      track = "SHS";
+      route = routeStudent(inputGrade, section);
+    } else {
+      // Default JHS
+      route = routeStudent(inputGrade, section);
+    }
+
+    if (!route) {
+      alert(`No routing for ${inputGrade} - ${section}`);
+      doubleCheckPassed = false;
+      return;
+    }
+
+    if (!doubleCheckPassed) {
+      // Show double check popup with 5s countdown, then OK button
+      await new Promise((resolve) => {
+        let count = 5;
+        let popup = document.getElementById("smoothPopup");
+        if (!popup) {
+          popup = document.createElement("div");
+          popup.id = "smoothPopup";
+          popup.style.position = "fixed";
+          popup.style.top = "50%";
+          popup.style.left = "50%";
+          popup.style.transform = "translate(-50%, -50%) scale(0.95)";
+          popup.style.minWidth = "280px";
+          popup.style.maxWidth = "90vw";
+          popup.style.background = "#fffbe6";
+          popup.style.color = "#856404";
+          popup.style.border = "2px solid #ffe58f";
+          popup.style.borderRadius = "16px";
+          popup.style.boxShadow = "0 8px 32px rgba(0,0,0,0.18)";
+          popup.style.padding = "24px 32px";
+          popup.style.fontSize = "1.1rem";
+          popup.style.fontWeight = "bold";
+          popup.style.textAlign = "center";
+          popup.style.zIndex = "999999";
+          popup.style.opacity = "0";
+          popup.style.transition = "opacity 0.3s, transform 0.3s";
+          document.body.appendChild(popup);
+        }
+        function showCountdown() {
+          popup.innerHTML = `DOUBLE CHECK YOUR INFORMATION, THANK YOU!<br><br><b>${count}</b>...`;
+          popup.style.display = "block";
+          popup.style.opacity = "1";
+          popup.style.transform = "translate(-50%, -50%) scale(1)";
+          if (count > 1) {
+            setTimeout(() => { count--; showCountdown(); }, 1000);
+          } else {
+            setTimeout(() => {
+              popup.innerHTML = `DOUBLE CHECK YOUR INFORMATION, THANK YOU!<br><br><button id='popupOkBtn' style='margin-top:16px;padding:8px 32px;font-size:1rem;border-radius:8px;border:none;background:#ffe58f;color:#856404;font-weight:bold;cursor:pointer;'>OK</button>`;
+              const okBtn = document.getElementById('popupOkBtn');
+              if (okBtn) okBtn.onclick = () => {
+                popup.style.opacity = "0";
+                setTimeout(() => { popup.style.display = "none"; }, 350);
+                resolve();
+              };
+            }, 1000);
+          }
+        }
+        showCountdown();
+      });
+      doubleCheckPassed = true;
+      return;
+    }
+    doubleCheckPassed = false;
+
+    await addDoc_v12(collection_v12(db, "inventory"), {
+      track,
+      name,
+      sex,
+      age,
+      lrn,
+      LRN: lrn,
+      inputGrade,
+      grade: route.grade,
+      section: route.section,
+      createdAt: serverTimestamp_v12()
+    });
+
+    // Show success popup for 3s
+    let popup = document.getElementById("smoothPopup");
+    if (!popup) {
+      popup = document.createElement("div");
+      popup.id = "smoothPopup";
+      popup.style.position = "fixed";
+      popup.style.top = "50%";
+      popup.style.left = "50%";
+      popup.style.transform = "translate(-50%, -50%) scale(0.95)";
+      popup.style.minWidth = "280px";
+      popup.style.maxWidth = "90vw";
+      popup.style.background = "#eaffea";
+      popup.style.color = "#1a7f37";
+      popup.style.border = "2px solid #b7eb8f";
+      popup.style.borderRadius = "16px";
+      popup.style.boxShadow = "0 8px 32px rgba(0,0,0,0.18)";
+      popup.style.padding = "24px 32px";
+      popup.style.fontSize = "1.1rem";
+      popup.style.fontWeight = "bold";
+      popup.style.textAlign = "center";
+      popup.style.zIndex = "999999";
+      popup.style.opacity = "0";
+      popup.style.transition = "opacity 0.3s, transform 0.3s";
+      document.body.appendChild(popup);
+    }
+    popup.innerHTML = `✅ ENROLMENT SUCCEEDED!`;
+    popup.style.background = "#eaffea";
+    popup.style.color = "#1a7f37";
+    popup.style.border = "2px solid #b7eb8f";
+    popup.style.display = "block";
+    popup.style.opacity = "1";
+    popup.style.transform = "translate(-50%, -50%) scale(1)";
+    setTimeout(() => {
+      popup.style.opacity = "0";
+      setTimeout(() => { popup.style.display = "none"; }, 350);
+    }, 3000);
+    form.reset();
+  } catch (err) {
+    console.error("Enrollment submit failed:", err);
+    alert("❌ FIREBASE ERROR. Check console.");
+    doubleCheckPassed = false;
+  }
+}, true);
 
 // ✅ ADDED: CAPTURE SUBMIT HANDLER (v12 Firestore) — ito ang magse-save sa inventory
 // ✅ ADDED: pinipigilan nito yung old submit handler sa baba para di na mag-error yung collection()
@@ -256,284 +527,6 @@ form.addEventListener("submit", async (e) => {
 });
 
 
-// =====================================================
-// ✅ ADDED ONLY: UPLOAD PREVIEW + OCR AUTOFILL (FIXED)
-// =====================================================
-const fileInput = document.getElementById("fileInput");
-const uploadBtn = document.getElementById("uploadBtn");
-const previewImg = document.getElementById("previewImg");
-const previewPlaceholder = document.getElementById("previewPlaceholder");
-const logBox = document.getElementById("logBox");
-
-function clearLog() {
-  if (logBox) logBox.textContent = "";
-}
-
-function logLine(msg) {
-  if (!logBox) return;
-  logBox.textContent += (logBox.textContent ? "\n" : "") + msg;
-}
-
-function setVal(id, val) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (val === undefined || val === null) return;
-  const v = String(val).trim();
-  if (v) el.value = v;
-}
-
-// Validation helpers used to avoid filling garbage from OCR
-function isValidLRN(s){
-  if(!s) return false;
-  const digits = String(s).replace(/[^0-9]/g,'');
-  return digits.length >= 10 && digits.length <= 12;
-}
-function isValidAge(s){
-  if(!s) return false;
-  const n = Number(String(s).match(/\d{1,2}/));
-  return Number.isInteger(n) && n >= 4 && n <= 100;
-}
-function isValidSex(s){
-  if(!s) return false;
-  return /^(MALE|FEMALE|M|F)$/i.test(String(s).trim());
-}
-function isValidName(s){
-  if(!s) return false;
-  const t = String(s).trim();
-  // require at least two words and letters
-  return /[A-Za-z]/.test(t) && t.split(/\s+/).length >= 2 && t.length >= 4;
-}
-function isValidGrade(s){
-  if(!s) return false;
-  const m = String(s).match(/(\d{1,2})/);
-  if(m) return Number(m[1]) >= 7 && Number(m[1]) <= 12;
-  const w = String(s).toUpperCase();
-  return /EIGHT|NINE|TEN|ELEVEN|TWELVE|SEVEN/.test(w);
-}
-function isValidSection(s){
-  if(!s) return false;
-  const t = String(s).trim();
-  // allow known sections or short all-letter tokens
-  if(/^[A-Z0-9\-\s]{2,20}$/i.test(t)) return true;
-  return false;
-}
-
-function bestLRN(text) {
-  const matches = text.match(/\b\d{10,12}\b/g) || [];
-  if (matches.length === 0) return "";
-  const m12 = matches.find(x => x.length === 12);
-  return m12 || matches[0];
-}
-
-function cutAtKeywords(s) {
-  return (s || "")
-    .replace(/\b(SEX|AGE|GRADE|SECTION|LRN)\b.*$/i, "")
-    .trim();
-}
-
-function extractLineValue(lines, label) {
-  const re = new RegExp(`^\\s*${label}\\s*[:\\-]?\\s*(.+)$`, "i");
-  for (const ln of lines) {
-    const m = ln.match(re);
-    if (m) return cutAtKeywords(m[1]);
-  }
-  return "";
-}
-
-function parseOCRToFields(rawText) {
-  // More tolerant OCR parsing: label-first, then fallbacks
-  const raw = String(rawText || "").replace(/\r/g, "\n");
-  const cleaned = raw.replace(/[\u2018\u2019\u201C\u201D\u2013\u2014]/g, ' ').replace(/[^	\n\x20-\x7E]/g, ' ');
-  const lines = cleaned.split("\n").map(x => x.trim()).filter(Boolean);
-  const joined = lines.join(" ");
-  const U = joined.toUpperCase();
-
-  const nameLabels = ['NAME','STUDENT NAME','FULL NAME'];
-  const sexLabels = ['SEX','GENDER'];
-  const ageLabels = ['AGE','AGE:'];
-  const gradeLabels = ['GRADE','GRADE LEVEL','YR'];
-  const lrnLabels = ['LRN','LEARNER REFERENCE NUMBER'];
-
-  function labelExtract(labels){
-    for(const ln of lines){
-      for(const lbl of labels){
-        const re = new RegExp('^\\s*'+lbl+'\\s*[:\\-]?\\s*(.+)$','i');
-        const m = ln.match(re);
-        if(m) return cutAtKeywords(m[1]);
-      }
-    }
-    return "";
-  }
-
-  let name = labelExtract(nameLabels);
-  let sex = labelExtract(sexLabels);
-  let age = labelExtract(ageLabels);
-  let grade = labelExtract(gradeLabels);
-  let section = "";
-  let lrn = labelExtract(lrnLabels);
-
-  // Fallbacks
-  if (!sex) {
-    const m = U.match(/\b(MALE|FEMALE)\b/);
-    if (m) sex = m[1];
-  }
-
-  if (!age) {
-    const m = U.match(/AGE[:\s]*(\d{1,2})/i);
-    if (m) age = m[1];
-  } else {
-    const m = age.match(/\d{1,2}/);
-    if (m) age = m[0];
-  }
-
-  // Grade detection: numeric or word (EIGHT -> 8)
-  if (!grade) {
-    let m = U.match(/INCOMING\s*GRADE\s*(\d{1,2})/i) || U.match(/GRADE\s*(\d{1,2})/i) || U.match(/\bG\s*(\d{1,2})\b/);
-    if (m) grade = m[1];
-    else {
-      const wordMap = { 'EIGHT':8,'NINE':9,'TEN':10,'ELEVEN':11,'TWELVE':12,'SEVEN':7 };
-      const wm = U.match(/\b(EIGHT|NINE|TEN|ELEVEN|TWELVE|SEVEN)\b/);
-      if (wm) grade = String(wordMap[wm[1]]);
-    }
-  }
-
-  // Section detection from known values
-  const secRe = /\b(PYTHON|SAMPAGUITA|JASMIN|ORCHIDS|DAISY|LAVENDER|AZURE|EARTH|JUPITER|NEPTUNE|AI|SILVER|COPPER|GOLD|NICKEL|HUMMS\s*A|HUMMS\s*B|ABM|TVL-ICT|TVL-HE|ICT|HE|MAHARLIKA)\b/i;
-  const sec1 = joined.match(secRe);
-  if (sec1) section = sec1[1].replace(/\s+/g,' ').toUpperCase();
-
-  // LRN: labelled or first 10-12 digit sequence
-  if (!lrn) {
-    const m = joined.match(/LRN[:\s]*([0-9\-\s]{10,16})/i);
-    if (m) lrn = (m[1] || '').replace(/[^0-9]/g,'');
-    if (!lrn) lrn = bestLRN(joined);
-  }
-
-  // Name fallback: find a line that looks like a name (contains letters and a space, not other labels)
-  if (!name) {
-    for(const ln of lines){
-      if (/\b(SEX|AGE|GRADE|SECTION|LRN|INCOMING|STUDENT|ID|SCHOOL)\b/i.test(ln)) continue;
-      if (/[^A-Z\s\,\.]/i.test(ln)) {
-        // allow typical name chars
-      }
-      const parts = ln.trim().split(/\s+/);
-      if (parts.length >= 2 && parts.length <= 5 && /[A-Za-z]/.test(ln)) { name = cutAtKeywords(ln); break; }
-    }
-  }
-
-  // Normalize name: remove stray labels, digits; prefer comma-separated 'Last, First' when available
-  function normalizeName(n){
-    if(!n) return "";
-    let s = String(n).trim();
-    s = s.replace(/\b(NAME|STUDENT|LRN|AGE|SEX|GRADE|SECTION)[:\s]*\b/ig,'').trim();
-    s = s.replace(/[^A-Za-z\,\.\s\-']/g,'');
-    // if contains digits after cleanup, reject
-    if(/\d/.test(s)) s = s.replace(/\d+/g,'');
-    s = s.replace(/\s{2,}/g,' ');
-    // prefer comma format; else title case
-    if(/,/.test(s)){
-      return s.split(',').map(p => p.trim()).filter(Boolean).join(', ');
-    }
-    // Title case words
-    return s.split(/\s+/).map(w => w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ');
-  }
-
-  name = normalizeName(name);
-
-  let incoming = "";
-  const inc = U.match(/INCOMING\s*GRADE\s*(\d{1,2})/i) || (grade && grade.match(/\d{1,2}/));
-  if (inc) incoming = `Incoming Grade ${inc[1] || grade}`;
-
-  // Normalize outputs
-  if (name) name = name.trim();
-  if (sex) sex = sex.trim();
-  if (age) age = String(age).trim();
-  if (grade) grade = String(grade).trim();
-  if (section) section = section.trim();
-  if (lrn) lrn = String(lrn).trim();
-
-  return { name, sex, age, grade, section, lrn, incoming };
-}
-
-// Preview on choose
-if (fileInput) {
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files?.[0];
-    if (!file) return;
-
-    if (previewImg) {
-      previewImg.src = URL.createObjectURL(file);
-      previewImg.style.display = "block";
-    }
-    if (previewPlaceholder) previewPlaceholder.style.display = "none";
-
-    clearLog();
-    logLine("🖼️ Image selected. Click UPLOAD to auto-fill.");
-  });
-}
-
-// OCR on upload click (LINE-BY-LINE %)
-if (uploadBtn) {
-  uploadBtn.addEventListener("click", async () => {
-    const file = fileInput?.files?.[0];
-    if (!file) {
-      alert("Please choose an image first.");
-      return;
-    }
-    if (typeof Tesseract === "undefined") {
-      alert("Tesseract.js not loaded.");
-      return;
-    }
-
-    clearLog();
-    let lastPct = 0;
-    logLine("OCR LOADING 0%");
-
-    try {
-      const result = await Tesseract.recognize(file, "eng", {
-        logger: (m) => {
-          if (m?.status === "recognizing text" && typeof m.progress === "number") {
-            const pct = Math.max(1, Math.min(100, Math.floor(m.progress * 100)));
-            while (lastPct < pct) {
-              lastPct++;
-              logLine(`OCR LOADING ${lastPct}%`);
-            }
-          }
-        }
-      });
-
-      const text = result?.data?.text || "";
-      const parsed = parseOCRToFields(text);
-
-      // Only set fields that pass validation to avoid garbage autofill
-      if (isValidName(parsed.name)) { setVal("name", parsed.name); logLine("NAME autofilled"); }
-      else logLine("NAME not confident — skipped");
-
-      if (isValidSex(parsed.sex)) { setVal("sex", parsed.sex); logLine("SEX autofilled"); }
-      else logLine("SEX not confident — skipped");
-
-      if (isValidAge(parsed.age)) { setVal("age", parsed.age); logLine("AGE autofilled"); }
-      else logLine("AGE not confident — skipped");
-
-      if (isValidGrade(parsed.grade)) { setVal("grade", parsed.grade); logLine("GRADE autofilled"); }
-      else logLine("GRADE not confident — skipped");
-
-      if (isValidSection(parsed.section)) { setVal("section", parsed.section); logLine("SECTION autofilled"); }
-      else logLine("SECTION not confident — skipped");
-
-      if (isValidLRN(parsed.lrn)) { setVal("lrn", parsed.lrn); logLine("LRN autofilled"); }
-      else logLine("LRN not confident — skipped");
-
-      if (youAreInput && parsed.incoming) youAreInput.value = parsed.incoming;
-
-      logLine("✅ AUTOFILL DONE");
-    } catch (err) {
-      console.error(err);
-      logLine("❌ OCR failed. Check console.");
-      alert("OCR failed. Try clearer image.");
-    }
-  });
-}
 
 
 // ================================
