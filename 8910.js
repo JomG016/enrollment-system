@@ -130,7 +130,7 @@ const SECTIONS_BY_GRADE = {
   7: ["PYTHON","SAMPAGUITA","ORCHIDS","LAVENDER","JASMIN","DAISY"],
   8: ["AZURE","VENUS","JUPITER","NEPTUNE","EARTH"],
   9: ["AI","SILVER","COPPER","GOLD","NICKEL"],
-  11:["HUMMS A","HUMMS B","ABM","TVL-HE","TVL-ICT","AFA"]
+  11:["HUMSS A","HUMSS B","ABM","TVL-HE","TVL-ICT","AFA"]
 };
 
 function readGradeNumber(){
@@ -284,8 +284,8 @@ const ROUTES = {
     "NICKEL": [{ grade: "Grade 10", section: "BONIFACIO" }],
   },
   "Grade 11": {
-    "HUMMS A": [{ grade: "Grade 12", section: "HUMMS A" }],
-    "HUMMS B": [{ grade: "Grade 12", section: "HUMMS B" }],
+    "HUMSS A": [{ grade: "Grade 12", section: "HUMSS A" }],
+    "HUMSS B": [{ grade: "Grade 12", section: "HUMSS B" }],
     "ABM": [{ grade: "Grade 12", section: "ABM" }],
     "TVL-ICT": [{ grade: "Grade 12", section: "TVL-ICT" }],
     "TVL-HE": [{ grade: "Grade 12", section: "TVL-HE" }],
@@ -350,7 +350,7 @@ form.addEventListener("submit", async (e) => {
     let route = null;
 
     // If SHS (Grade 12) or Grade 11
-    if (!incomingGrade && section && ["HUMMS A","HUMMS B","ABM","TVL-ICT","TVL-HE","AFA"].includes(section)) {
+    if (!incomingGrade && section && ["HUMSS A","HUMSS B","ABM","TVL-ICT","TVL-HE","AFA"].includes(section)) {
       inputGrade = "Grade 11";
       incomingGrade = 12;
       track = "SHS";

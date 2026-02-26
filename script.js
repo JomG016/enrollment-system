@@ -22,8 +22,8 @@ const upper = (s) => norm(s).toUpperCase();
 
 const SHS_ROUTES = {
   "Grade 11": {
-    "HUMMS A": [{ grade: "Grade 12", section: "HUMMS A" }],
-    "HUMMS B": [{ grade: "Grade 12", section: "HUMMS B" }],
+    "HUMSS A": [{ grade: "Grade 12", section: "HUMSS A" }],
+    "HUMSS B": [{ grade: "Grade 12", section: "HUMSS B" }],
     "ABM": [{ grade: "Grade 12", section: "ABM" }],
     "TVL-ICT": [{ grade: "Grade 12", section: "TVL-ICT" }],
     "TVL-HE": [{ grade: "Grade 12", section: "TVL-HE" }],
@@ -221,7 +221,7 @@ function parseOCRToFields(rawText) {
     if (m) age = m[0];
   }
 
-  const secRe = /\b(HUMMS\s*A|HUMMS\s*B|ABM|TVL-ICT|TVL-HE|ICT|HE|MAHARLIKA)\b/i;
+  const secRe = /\b(HUMSS\s*A|HUMSS\s*B|ABM|TVL-ICT|TVL-HE|ICT|HE|MAHARLIKA)\b/i;
   const sec1 = joined.match(secRe);
   if (sec1) {
     const s = sec1[1].replace(/\s+/g, " ").toUpperCase();

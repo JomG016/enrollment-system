@@ -2,95 +2,124 @@ import { auth } from "./firebase-init.js";
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   setPersistence,
-  browserSessionPersistence
+  browserLocalPersistence,
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-/**
- * ADMIN ONLY
- * 1) Require user to type an admin email (for intentionality + allowlist)
- * 2) Force login every time (session-only + signOut on load)
- * 3) No auto redirect (redirect only after button click + successful check)
- */
-
-// 🔒 Put your admin emails here (lowercase)
+// ✅ Admin allowlist (edit as needed)
 const ADMIN_EMAILS = new Set([
   "carmennhsenrollment@gmail.com",
-  // "anotheradmin@gmail.com",
 ]);
 
 const emailInput = document.getElementById("adminEmail");
 const googleBtn = document.getElementById("googleBtn");
-const clearBtn = document.getElementById("clearBtn");
-const backBtn = document.getElementById("backBtn");
 const statusEl = document.getElementById("status");
 
+function normalizeEmail(v) {
+  return String(v || "").trim().toLowerCase();
+}
 function setStatus(msg, type) {
   statusEl.textContent = msg || "";
   statusEl.classList.remove("ok", "bad");
   if (type) statusEl.classList.add(type);
 }
 
-function normalizeEmail(v) {
-  return String(v || "").trim().toLowerCase();
+// ✅ (Recommended) local persistence para mas consistent across reloads
+await setPersistence(auth, browserLocalPersistence);
+
+// ✅ helper: detect in-app browsers (Messenger/FB/IG) na madalas sumablay
+function isInAppBrowser() {
+  const ua = navigator.userAgent || "";
+  return /FBAN|FBAV|Instagram|Line|Twitter|TikTok/i.test(ua);
 }
 
-// ✅ Force “login again every time”
-// - session persistence (dies when tab/browser closes)
-// - signOut on page load so no existing session gets reused
-await setPersistence(auth, browserSessionPersistence);
-try { await signOut(auth); } catch (_) {}
+function makeProvider() {
+  const provider = new GoogleAuthProvider();
+  // pipilitin pumili ng account (avoid wrong account auto-selected)
+  provider.setCustomParameters({ prompt: "select_account" });
+  return provider;
+}
 
-setStatus("Please enter your admin email, then continue with Google.");
+async function finishLogin(user) {
+  const signedEmail = normalizeEmail(user?.email);
 
-clearBtn.addEventListener("click", () => {
-  emailInput.value = "";
-  setStatus("Cleared.", "ok");
-});
+  if (!ADMIN_EMAILS.has(signedEmail)) {
+    await signOut(auth);
+    setStatus("Not authorized (admin only).", "bad");
+    return;
+  }
 
-backBtn.addEventListener("click", () => {
-  window.location.href = "./index.html";
-});
+  setStatus("Login OK. Redirecting…", "ok");
+  window.location.replace("./dashboard.html");
+}
 
+// ✅ 1) ALWAYS handle redirect result on page load
+try {
+  const rr = await getRedirectResult(auth);
+  if (rr?.user) {
+    await finishLogin(rr.user);
+  }
+} catch (e) {
+  console.error(e);
+  setStatus(e.code || e.message || "Redirect login failed.", "bad");
+}
+
+// ✅ 2) Button click: desktop popup, mobile redirect, popup fallback to redirect
 googleBtn.addEventListener("click", async () => {
   setStatus("", "");
   googleBtn.disabled = true;
 
   try {
+    // Optional: keep your “type email first” UX
     const typedEmail = normalizeEmail(emailInput.value);
     if (!typedEmail) {
-      setStatus("Type your admin email first.", "bad");
+      setStatus("Enter the Email.", "bad");
       return;
     }
+    // NOTE: wag mo i-require na match ang typedEmail sa signed email;
+    // allowlist check na lang ang “security”
     if (!ADMIN_EMAILS.has(typedEmail)) {
-      setStatus("This email is not allowed (admin only).", "bad");
+      setStatus("Wrong admin email (not allowed).", "bad");
       return;
     }
 
-    const provider = new GoogleAuthProvider();
-    // Forces account picker every time
-    provider.setCustomParameters({ prompt: "select_account" });
+    if (isInAppBrowser()) {
+      setStatus("Open in Chrome/Safari.", "bad");
+      // itutuloy pa rin natin sa redirect kasi pinaka compatible
+    }
 
+    const provider = makeProvider();
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // ✅ mobile: redirect
+      await signInWithRedirect(auth, provider);
+      return;
+    }
+
+    // ✅ desktop: popup
     const result = await signInWithPopup(auth, provider);
-    const signedEmail = normalizeEmail(result.user?.email);
+    await finishLogin(result.user);
 
-    if (!signedEmail || signedEmail !== typedEmail) {
-      await signOut(auth);
-      setStatus("Signed-in email does not match what you typed.", "bad");
-      return;
-    }
-
-    if (!ADMIN_EMAILS.has(signedEmail)) {
-      await signOut(auth);
-      setStatus("Not authorized.", "bad");
-      return;
-    }
-
-    setStatus("Login OK. Redirecting…", "ok");
-    window.location.replace("./dashboard.html");
   } catch (e) {
     console.error(e);
+
+    // ✅ fallback: kapag blocked ang popup, redirect na lang
+    if (e?.code === "auth/popup-blocked" || e?.code === "auth/popup-closed-by-user") {
+      try {
+        const provider = makeProvider();
+        await signInWithRedirect(auth, provider);
+        return;
+      } catch (e2) {
+        console.error(e2);
+        setStatus(e2.code || e2.message || "Redirect fallback failed.", "bad");
+        return;
+      }
+    }
+
     setStatus(e.code || e.message || "Google login failed.", "bad");
   } finally {
     googleBtn.disabled = false;
