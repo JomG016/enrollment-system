@@ -3,29 +3,43 @@
 // (No lines removed; this file includes original inv.js content unchanged after this block)
 // ======================
 import { auth } from "./firebase-init.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-onAuthStateChanged(auth, (user) => {
-  // WALANG USER or ANONYMOUS → BALIK SA LOGIN
+// ✅ keep SAME list as Admin.js (lowercase)
+const allowedAdmins = [
+  "carmennhsenrollment@gmail.com",
+  // "admin@gmail.com",
+].map(e => String(e).trim().toLowerCase());
+
+let checkedOnce = false;
+
+onAuthStateChanged(auth, async (user) => {
+  // ✅ Some mobiles fire null first, then user after hydration.
+  // Give it a short grace period BEFORE redirecting.
   if (!user || user.isAnonymous) {
+    if (!checkedOnce) {
+      checkedOnce = true;
+      setTimeout(() => {
+        if (!auth.currentUser) {
+          window.location.replace("./admin.html");
+        }
+      }, 1200);
+      return;
+    }
     window.location.replace("./admin.html");
     return;
   }
 
-  // OPTIONAL: email allowlist (recommended)
-  // OPTIONAL: email allowlist (recommended)
-const allowedAdmins = [
-  "carmennhsenrollment@gmail.com",
-  "admin@gmail.com"
-].map(e => String(e).trim().toLowerCase());
+  const currentEmail = String(user.email || "").trim().toLowerCase();
 
-const currentEmail = String(user.email || "").trim().toLowerCase();
+  if (!allowedAdmins.includes(currentEmail)) {
+    alert("Not authorized");
+    try { await signOut(auth); } catch (_) {}
+    window.location.replace("./admin.html");
+    return;
+  }
 
-if (!allowedAdmins.includes(currentEmail)) {
-  alert("Not authorized");
-  window.location.replace("./admin.html");
-  return;
-}
+  // ✅ authorized → tuloy lang (do nothing)
 });
 
 import { documentId as __cnhs_documentId_v6, FieldPath as __cnhs_FieldPath_v6 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
