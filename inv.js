@@ -12,16 +12,17 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
-  // OPTIONAL: email allowlist (recommended)
-  const allowedAdmins = [
-    "carmennhsenrollment@gmail.com",
-    "admin@gmail.com"
-  ];
+const allowedAdmins = [
+  "carmennhsenrollment@gmail.com"
+].map(e => String(e).trim().toLowerCase());
 
-  if (!allowedAdmins.includes(user.email)) {
-    alert("Not authorized");
-    window.location.replace("./admin.html");
-  }
+const currentEmail = String(user.email || "").trim().toLowerCase();
+
+if (!allowedAdmins.includes(currentEmail)) {
+  alert("Not authorized");
+  window.location.replace("./admin.html");
+  return;
+}
 });
 
 import { documentId as __cnhs_documentId_v6, FieldPath as __cnhs_FieldPath_v6 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
