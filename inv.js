@@ -12,8 +12,11 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
+  // OPTIONAL: email allowlist (recommended)
+  // OPTIONAL: email allowlist (recommended)
 const allowedAdmins = [
-  "carmennhsenrollment@gmail.com"
+  "carmennhsenrollment@gmail.com",
+  "admin@gmail.com"
 ].map(e => String(e).trim().toLowerCase());
 
 const currentEmail = String(user.email || "").trim().toLowerCase();

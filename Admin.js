@@ -2,113 +2,97 @@ import { auth } from "./firebase-init.js";
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signOut,
   setPersistence,
-  browserLocalPersistence,
-  onAuthStateChanged,
+  browserSessionPersistence
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-const ADMIN_EMAILS = new Set(["carmennhsenrollment@gmail.com"]);
+/**
+ * ADMIN ONLY
+ * 1) Require user to type an admin email (for intentionality + allowlist)
+ * 2) Force login every time (session-only + signOut on load)
+ * 3) No auto redirect (redirect only after button click + successful check)
+ */
+
+// 🔒 Put your admin emails here (lowercase)
+const ADMIN_EMAILS = new Set([
+  "carmennhsenrollment@gmail.com",
+  // "anotheradmin@gmail.com",
+]);
 
 const emailInput = document.getElementById("adminEmail");
 const googleBtn = document.getElementById("googleBtn");
+const clearBtn = document.getElementById("clearBtn");
+const backBtn = document.getElementById("backBtn");
 const statusEl = document.getElementById("status");
 
-function normalizeEmail(v) { return String(v || "").trim().toLowerCase(); }
 function setStatus(msg, type) {
   statusEl.textContent = msg || "";
   statusEl.classList.remove("ok", "bad");
   if (type) statusEl.classList.add(type);
 }
 
-await setPersistence(auth, browserLocalPersistence);
-
-function isInAppBrowser() {
-  const ua = navigator.userAgent || "";
-  return /FBAN|FBAV|Instagram|Line|Twitter|TikTok/i.test(ua);
-}
-function makeProvider() {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: "select_account" });
-  return provider;
+function normalizeEmail(v) {
+  return String(v || "").trim().toLowerCase();
 }
 
-async function finishLogin(user) {
-  const signedEmail = normalizeEmail(user?.email);
+// ✅ Force “login again every time”
+// - session persistence (dies when tab/browser closes)
+// - signOut on page load so no existing session gets reused
+await setPersistence(auth, browserSessionPersistence);
+try { await signOut(auth); } catch (_) {}
 
-  if (!ADMIN_EMAILS.has(signedEmail)) {
-    await signOut(auth);
-    setStatus("Not authorized (admin only).", "bad");
-    return;
-  }
+setStatus("Please enter your admin email, then continue with Google.");
 
-  // ✅ once signed-in, go dashboard
-  window.location.replace("./dashboard.html");
-}
-
-/**
- * ✅ SUPER IMPORTANT:
- * Even if getRedirectResult returns null on some mobiles,
- * onAuthStateChanged will still fire if user is actually signed in.
- */
-let handled = false;
-onAuthStateChanged(auth, async (user) => {
-  if (handled) return;
-  if (user) {
-    handled = true;
-    await finishLogin(user);
-  }
+clearBtn.addEventListener("click", () => {
+  emailInput.value = "";
+  setStatus("Cleared.", "ok");
 });
 
-// (optional) still keep this for extra compatibility
-try {
-  const rr = await getRedirectResult(auth);
-  if (rr?.user) {
-    handled = true;
-    await finishLogin(rr.user);
-  }
-} catch (e) {
-  console.error(e);
-  setStatus(e.code || e.message || "Redirect login failed.", "bad");
-}
+backBtn.addEventListener("click", () => {
+  window.location.href = "./index.html";
+});
 
 googleBtn.addEventListener("click", async () => {
   setStatus("", "");
   googleBtn.disabled = true;
 
-  let redirecting = false;
-
   try {
     const typedEmail = normalizeEmail(emailInput.value);
-    if (!typedEmail) { setStatus("Enter the Email.", "bad"); return; }
-    if (!ADMIN_EMAILS.has(typedEmail)) { setStatus("Wrong admin email (not allowed).", "bad"); return; }
-
-    const provider = makeProvider();
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    // in-app browser → redirect
-    if (isInAppBrowser() || isMobile) {
-      redirecting = true;
-      await signInWithRedirect(auth, provider);
+    if (!typedEmail) {
+      setStatus("Type your admin email first.", "bad");
+      return;
+    }
+    if (!ADMIN_EMAILS.has(typedEmail)) {
+      setStatus("This email is not allowed (admin only).", "bad");
       return;
     }
 
-    // desktop → popup
-    const result = await signInWithPopup(auth, provider);
-    await finishLogin(result.user);
+    const provider = new GoogleAuthProvider();
+    // Forces account picker every time
+    provider.setCustomParameters({ prompt: "select_account" });
 
+    const result = await signInWithPopup(auth, provider);
+    const signedEmail = normalizeEmail(result.user?.email);
+
+    if (!signedEmail || signedEmail !== typedEmail) {
+      await signOut(auth);
+      setStatus("Signed-in email does not match what you typed.", "bad");
+      return;
+    }
+
+    if (!ADMIN_EMAILS.has(signedEmail)) {
+      await signOut(auth);
+      setStatus("Not authorized.", "bad");
+      return;
+    }
+
+    setStatus("Login OK. Redirecting…", "ok");
+    window.location.replace("./dashboard.html");
   } catch (e) {
     console.error(e);
-    if (e?.code === "auth/popup-blocked" || e?.code === "auth/popup-closed-by-user") {
-      const provider = makeProvider();
-      redirecting = true;
-      await signInWithRedirect(auth, provider);
-      return;
-    }
     setStatus(e.code || e.message || "Google login failed.", "bad");
   } finally {
-    if (!redirecting) googleBtn.disabled = false;
+    googleBtn.disabled = false;
   }
 });
