@@ -13,19 +13,15 @@ onAuthStateChanged(auth, (user) => {
   }
 
   // OPTIONAL: email allowlist (recommended)
-  // OPTIONAL: email allowlist (recommended)
-const allowedAdmins = [
-  "carmennhsenrollment@gmail.com",
-  "admin@gmail.com"
-].map(e => String(e).trim().toLowerCase());
+  const allowedAdmins = [
+    "carmennhsenrollment@gmail.com",
+    "admin@gmail.com"
+  ];
 
-const currentEmail = String(user.email || "").trim().toLowerCase();
-
-if (!allowedAdmins.includes(currentEmail)) {
-  alert("Not authorized");
-  window.location.replace("./admin.html");
-  return;
-}
+  if (!allowedAdmins.includes(user.email)) {
+    alert("Not authorized");
+    window.location.replace("./admin.html");
+  }
 });
 
 import { documentId as __cnhs_documentId_v6, FieldPath as __cnhs_FieldPath_v6 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
@@ -126,7 +122,7 @@ const gradeSections = {
   "Grade 8": ["PYTHON","EARTH","JUPITER","VENUS","NEPTUNE"],
   "Grade 9": ["AZURE","SILVER","COPPER","GOLD","NICKEL"],
   "Grade 10": ["AI","MABINI","RIZAL","BONIFACIO","DEL-PILAR"],
-  "Grade 12": ["HUMSS A","HUMSS B","ABM","TVL-ICT","TVL-HE", "AFA"]
+  "Grade 12": ["HUMMS A","HUMMS B","ABM","TVL-ICT","TVL-HE", "AFA"]
 };
 
 const adviserByGradeSection = {
@@ -148,8 +144,8 @@ const adviserByGradeSection = {
   "Grade 10|BONIFACIO": "GIRLIE JOY YAMBAO",
   "Grade 10|DEL-PILAR": "JOCELYN DAGA",
 
-  "Grade 12|HUMSS A": "VALERIE AGTANI",
-  "Grade 12|HUMSS B": "REVELYN CENTENO",
+  "Grade 12|HUMMS A": "VALERIE AGTANI",
+  "Grade 12|HUMMS B": "REVELYN CENTENO",
   "Grade 12|ABM": "MARIBETH DEGUZMAN",
   "Grade 12|TVL-ICT": "TAGUMPAY IRABAGON",
   "Grade 12|TVL-HE": "CHELMI TURLA",
