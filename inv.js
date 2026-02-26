@@ -3,41 +3,29 @@
 // (No lines removed; this file includes original inv.js content unchanged after this block)
 // ======================
 import { auth } from "./firebase-init.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-const allowedAdmins = [
-  "carmennhsenrollment@gmail.com"
-].map(e => e.toLowerCase());
-
-let initialCheckDone = false;
-
-onAuthStateChanged(auth, async (user) => {
-
-  // 🔥 IMPORTANT: ignore first null if not initialized yet
-  if (!initialCheckDone) {
-    initialCheckDone = true;
-
-    // give firebase time to hydrate session (mobile redirect delay)
-    setTimeout(() => {
-      const current = auth.currentUser;
-
-      if (!current) {
-        window.location.replace("./admin.html");
-        return;
-      }
-
-      const email = (current.email || "").toLowerCase();
-
-      if (!allowedAdmins.includes(email)) {
-        signOut(auth);
-        window.location.replace("./admin.html");
-      }
-
-    }, 1500);
-
+onAuthStateChanged(auth, (user) => {
+  // WALANG USER or ANONYMOUS → BALIK SA LOGIN
+  if (!user || user.isAnonymous) {
+    window.location.replace("./admin.html");
     return;
   }
 
+  // OPTIONAL: email allowlist (recommended)
+  // OPTIONAL: email allowlist (recommended)
+const allowedAdmins = [
+  "carmennhsenrollment@gmail.com",
+  "admin@gmail.com"
+].map(e => String(e).trim().toLowerCase());
+
+const currentEmail = String(user.email || "").trim().toLowerCase();
+
+if (!allowedAdmins.includes(currentEmail)) {
+  alert("Not authorized");
+  window.location.replace("./admin.html");
+  return;
+}
 });
 
 import { documentId as __cnhs_documentId_v6, FieldPath as __cnhs_FieldPath_v6 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";

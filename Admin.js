@@ -1,8 +1,7 @@
 import { auth } from "./firebase-init.js";
 import {
   GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut,
   setPersistence,
   browserSessionPersistence
@@ -10,9 +9,9 @@ import {
 
 /**
  * ADMIN ONLY
- * 1) Require user to type an admin email (intentionality + allowlist)
- * 2) Use redirect sign-in (works on mobile + desktop + fresh devices)
- * 3) After successful sign-in, redirect to dashboard.html
+ * 1) Require user to type an admin email (for intentionality + allowlist)
+ * 2) Force login every time (session-only + signOut on load)
+ * 3) No auto redirect (redirect only after button click + successful check)
  */
 
 // 🔒 Put your admin emails here (lowercase)
@@ -37,29 +36,11 @@ function normalizeEmail(v) {
   return String(v || "").trim().toLowerCase();
 }
 
-// ✅ Session-only persistence (same vibe as your old code)
+// ✅ Force “login again every time”
+// - session persistence (dies when tab/browser closes)
+// - signOut on page load so no existing session gets reused
 await setPersistence(auth, browserSessionPersistence);
-
-// ✅ IMPORTANT: handle redirect result FIRST (do NOT signOut before this)
-try {
-  const rr = await getRedirectResult(auth);
-
-  if (rr?.user?.email) {
-    const signedEmail = normalizeEmail(rr.user.email);
-
-    // Allowlist check
-    if (!ADMIN_EMAILS.has(signedEmail)) {
-      await signOut(auth);
-      setStatus("Not authorized (admin only).", "bad");
-    } else {
-      setStatus("Login OK. Redirecting…", "ok");
-      window.location.replace("./dashboard.html");
-    }
-  }
-} catch (e) {
-  console.error(e);
-  setStatus(e.code || e.message || "Redirect login failed.", "bad");
-}
+try { await signOut(auth); } catch (_) {}
 
 setStatus("Please enter your admin email, then continue with Google.");
 
@@ -88,18 +69,30 @@ googleBtn.addEventListener("click", async () => {
     }
 
     const provider = new GoogleAuthProvider();
+    // Forces account picker every time
     provider.setCustomParameters({ prompt: "select_account" });
 
-    // ✅ Works on mobile + desktop + any device
-    await signInWithRedirect(auth, provider);
-    // after redirect, Google will return here and getRedirectResult() above will run
-    return;
+    const result = await signInWithPopup(auth, provider);
+    const signedEmail = normalizeEmail(result.user?.email);
 
+    if (!signedEmail || signedEmail !== typedEmail) {
+      await signOut(auth);
+      setStatus("Signed-in email does not match what you typed.", "bad");
+      return;
+    }
+
+    if (!ADMIN_EMAILS.has(signedEmail)) {
+      await signOut(auth);
+      setStatus("Not authorized.", "bad");
+      return;
+    }
+
+    setStatus("Login OK. Redirecting…", "ok");
+    window.location.replace("./dashboard.html");
   } catch (e) {
     console.error(e);
     setStatus(e.code || e.message || "Google login failed.", "bad");
   } finally {
-    // page is about to redirect, but just in case it doesn't:
     googleBtn.disabled = false;
   }
 });
