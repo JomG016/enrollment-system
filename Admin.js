@@ -3,8 +3,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
-  setPersistence,
-  browserSessionPersistence
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
 /**
@@ -35,12 +33,6 @@ function setStatus(msg, type) {
 function normalizeEmail(v) {
   return String(v || "").trim().toLowerCase();
 }
-
-// ✅ Force “login again every time”
-// - session persistence (dies when tab/browser closes)
-// - signOut on page load so no existing session gets reused
-await setPersistence(auth, browserSessionPersistence);
-try { await signOut(auth); } catch (_) {}
 
 setStatus("Please enter your admin email, then continue with Google.");
 
