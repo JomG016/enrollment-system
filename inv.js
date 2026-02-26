@@ -7,11 +7,10 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/fi
 
 onAuthStateChanged(auth, (user) => {
   // WALANG USER or ANONYMOUS → BALIK SA LOGIN
-  onAuthStateChanged(auth, (user) => {
-  if (!user) {
+  if (!user || user.isAnonymous) {
     window.location.replace("./admin.html");
+    return;
   }
-});
 
   // OPTIONAL: email allowlist (recommended)
   // OPTIONAL: email allowlist (recommended)
