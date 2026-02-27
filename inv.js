@@ -268,18 +268,24 @@ function dateIdFromTimestamp(ts){
 // TABLE: Firestore inventory
 // ---------------------------
 async function fetchInventoryForActive(){
-  // You can increase limit if you want
   const qy = query(
     collection(db, "inventory"),
     where("grade", "==", activeGrade),
     where("section", "==", activeSection),
-    orderBy("createdAt", "desc"),
-    limit(250)
+    limit(500)
   );
 
   const snap = await getDocs(qy);
   const rows = [];
   snap.forEach(ds => rows.push({ id: ds.id, ...ds.data() }));
+
+  // 🔥 A–Z sorting by student name
+  rows.sort((a, b) => {
+    const nameA = formatName(a).toUpperCase();
+    const nameB = formatName(b).toUpperCase();
+    return nameA.localeCompare(nameB);
+  });
+
   return rows;
 }
 
