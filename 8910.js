@@ -73,6 +73,25 @@ const youAreInput = document.getElementById("youAreInput");
 const norm = (s) => (s || "").toString().trim();
 const upper = (s) => norm(s).toUpperCase();
 
+// Contact number normalization (PH)
+// Accepts: 09xxxxxxxxx, 639xxxxxxxxx, +639xxxxxxxxx
+function normalizeContactNumber(raw){
+  let v = norm(raw);
+  if(!v) return null;
+  // keep digits only
+  let d = v.replace(/[^0-9]/g, "");
+  if(!d) return null;
+
+  // Convert 63XXXXXXXXXX -> 0XXXXXXXXXX
+  if(d.startsWith("63") && d.length === 12){
+    d = "0" + d.slice(2);
+  }
+
+  // Basic validation: 11 digits starting with 09
+  if(d.length !== 11 || !d.startsWith("09")) return null;
+  return d;
+}
+
 // Enforce name format: SURNAME, NAME MIDDLE NAME (no initials)
 function formatFullName(raw) {
   let s = String(raw || "").replace(/\s+/g, " ").trim();
@@ -430,6 +449,7 @@ form.addEventListener("submit", async (e) => {
       name,
       sex,
       age,
+      contactNumber: normalizeContactNumber(document.getElementById("contactNumber")?.value),
       lrn,
       LRN: lrn,
       inputGrade,
@@ -522,6 +542,7 @@ form.addEventListener("submit", async (e) => { // ✅ ADDED
       name, // ✅ ADDED
       sex, // ✅ ADDED
       age, // ✅ ADDED
+      contactNumber: normalizeContactNumber(document.getElementById("contactNumber")?.value),
       // Write both `lrn` and `LRN` to ensure dashboard and any existing readers see it
       lrn: lrn || null,
       LRN: lrn || null,
