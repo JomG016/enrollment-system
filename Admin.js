@@ -5,14 +5,6 @@ import {
   signOut,
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-/**
- * ADMIN ONLY
- * 1) Require user to type an admin email (for intentionality + allowlist)
- * 2) Force login every time (session-only + signOut on load)
- * 3) No auto redirect (redirect only after button click + successful check)
- */
-
-// 🔒 Put your admin emails here (lowercase)
 const ADMIN_EMAILS = new Set([
   "carmennhsenrollment@gmail.com",
   // "anotheradmin@gmail.com",
